@@ -30,6 +30,53 @@ class ClauseClassifier:
         self.meta_path = os.path.join(model_dir, "classifier_meta.json")
         self.pipeline = None
         self.classes_ = None
+        self.nli_pipeline = None
+
+    def get_nli_pipeline(self):
+        """Lazy-loads the zero-shot NLI classifier pipeline."""
+        if self.nli_pipeline is None:
+            from transformers import pipeline
+            logger.info("Loading zero-shot classification pipeline (cross-encoder/nli-distilroberta-base)...")
+            self.nli_pipeline = pipeline("zero-shot-classification", model="cross-encoder/nli-distilroberta-base")
+        return self.nli_pipeline
+
+    def predict_clause(self, text: str) -> Tuple[str, float, bool]:
+        """Predicts the clause type and confidence for a given text, utilizing NLI fallback if confidence is low."""
+        from config import config
+        confidence_threshold = config.classifier.confidence_threshold
+
+        if self.pipeline is None:
+            raise RuntimeError("Classifier has not been initialized. Call init_classifier() first.")
+
+        # 1. Scikit-Learn prediction
+        probs = self.pipeline.predict_proba([text])[0]
+        max_idx = np.argmax(probs)
+        pred_class = self.classes_[max_idx]
+        confidence = float(probs[max_idx])
+
+        # 2. Check if confidence meets threshold
+        if confidence >= confidence_threshold:
+            return pred_class, confidence, False
+
+        # 3. Fallback to Zero-Shot NLI
+        logger.warning(
+            f"Low confidence ({confidence:.2f} < {confidence_threshold:.2f}) for clause: '{text[:60]}...'. "
+            "Triggering Zero-Shot NLI fallback..."
+        )
+        
+        candidate_labels = [
+            "Liability", "Indemnification", "Payment", "Termination", "IP", 
+            "Confidentiality", "Governing_Law", "Force_Majeure", "Dispute_Resolution", "Other"
+        ]
+        
+        nli = self.get_nli_pipeline()
+        res = nli(text, candidate_labels=candidate_labels)
+        
+        nli_class = res["labels"][0]
+        nli_confidence = float(res["scores"][0])
+        
+        logger.success(f"NLI Fallback completed: predicted '{nli_class}' with confidence {nli_confidence:.2f}")
+        return nli_class, nli_confidence, True
 
     def get_csv_hash(self) -> str:
         """Computes SHA-256 hash of the training CSV file."""
