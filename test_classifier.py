@@ -83,3 +83,52 @@ def test_train_and_persist(tmp_path):
     pred, conf = clf.predict_sklearn("This is a Confidentiality agreement.")
     assert pred in clf.classes_
 
+
+def test_classifier_ac2():
+    import csv
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import Pipeline
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report
+    from config import config
+    
+    texts, labels = [], []
+    with open("clauses_training.csv", mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            text = row.get("text", "").strip()
+            label = row.get("label", "").strip()
+            if text and label:
+                texts.append(text)
+                labels.append(label)
+                
+    seed = config.reproducibility.classifier_seed
+    X_train, X_test, y_train, y_test = train_test_split(
+        texts, labels, test_size=0.2, random_state=seed, stratify=labels
+    )
+    
+    pipeline = Pipeline([
+        ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
+        ('clf', LogisticRegression(max_iter=1000, C=1.0, random_state=seed))
+    ])
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+    
+    report = classification_report(y_test, y_pred, output_dict=True)
+    macro_f1 = report["macro avg"]["f1-score"]
+    
+    assert macro_f1 > 0.75
+
+
+def test_classifier_ac3(classifier):
+    fixtures = [
+        "Something completely unrelated about standard things and random stuff.",
+        "Abcd efgh ijkl mnop qrst uvw xyz.",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    ]
+    for text in fixtures:
+        _, _, fallback_used = classifier.predict_clause(text)
+        assert fallback_used is True
+
+
