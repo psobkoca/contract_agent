@@ -188,7 +188,7 @@ class RAGEngine:
         self.bm25 = BM25(corpus=documents, chunk_ids=ids)
         logger.success(f"BM25 index built with {len(documents)} passages.")
 
-    def hybrid_search(self, query_text: str, top_k: Optional[int] = None) -> List[dict]:
+    def hybrid_search(self, query_text: str, top_k: Optional[int] = None, rerank: bool = True, top_n: int = 3) -> List[dict]:
         """Performs hybrid search: dense cosine similarity + sparse BM25 merged via RRF (FR-11)."""
         if top_k is None:
             top_k = config.rag.top_k
@@ -244,7 +244,19 @@ class RAGEngine:
                 "sparse_rank": sparse_ranks.get(cid, -1)
             })
 
-        logger.info(f"Hybrid search returned top-{len(results)} candidate passages.")
+        logger.info(f"Hybrid search returned top-{len(results)} candidate passages before reranking.")
+
+        # 4. Cross-Encoder Reranking (FR-12)
+        if rerank and results:
+            pairs = [(query_text, r["text"]) for r in results]
+            rerank_scores = self.reranker_model.predict(pairs)
+            for idx, score in enumerate(rerank_scores):
+                results[idx]["rerank_score"] = float(score)
+            
+            # Sort by rerank score descending
+            results = sorted(results, key=lambda x: x["rerank_score"], reverse=True)[:top_n]
+            logger.info(f"Reranked with cross-encoder, returned top-{len(results)} passages.")
+
         return results
 
 def main():
