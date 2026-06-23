@@ -51,6 +51,14 @@ class LLMClient:
 
     def create_message(self, **kwargs) -> Any:
         """Sends a message request to Claude, with retry logic, token guard, and cost logging."""
+        # Check daily spend limit
+        from config import config
+        daily_limit = config.llm.daily_spend_limit
+        current_daily_spend = self._get_daily_spend()
+        if current_daily_spend >= daily_limit:
+            logger.error(f"Daily API spend limit reached: ${current_daily_spend:.2f} >= ${daily_limit:.2f}")
+            raise ValueError(f"Daily API spend limit reached: ${current_daily_spend:.2f} >= ${daily_limit:.2f}")
+
         # 1. Token Guard check
         # Sum up system prompt and messages content
         total_input_chars = 0
@@ -84,8 +92,14 @@ class LLMClient:
         input_token_estimate = self.count_tokens(reconstructed_text)
         
         if input_token_estimate > self.token_limit:
-            logger.error(f"Token Guard Triggered: input is {input_token_estimate} tokens, limit is {self.token_limit}")
-            raise ValueError(f"Prompt length of {input_token_estimate} tokens exceeds token guard limit of {self.token_limit}")
+            logger.warning(f"Prompt length of {input_token_estimate} exceeds token limit of {self.token_limit}. Truncating.")
+            if "messages" in kwargs and len(kwargs["messages"]) > 0:
+                first_msg = kwargs["messages"][0]
+                if isinstance(first_msg.get("content"), str):
+                    first_msg_tokens = self.count_tokens(first_msg["content"])
+                    excess = input_token_estimate - self.token_limit
+                    allowed_tokens = max(0, first_msg_tokens - excess)
+                    first_msg["content"] = self.truncate_text_to_tokens(first_msg["content"], allowed_tokens)
             
         if not self.client:
             raise RuntimeError("Anthropic client is not initialized (missing API key).")
@@ -120,6 +134,7 @@ class LLMClient:
                     f"Cumulative Cost: ${self.cumulative_cost:.6f}"
                 )
                 
+                self._add_to_daily_spend(cost)
                 return response
                 
             except (APIConnectionError, APITimeoutError, RateLimitError, InternalServerError) as e:
@@ -142,3 +157,40 @@ class LLMClient:
                 else:
                     logger.error(f"Non-retryable API status error {e.status_code}: {e}")
                     raise e
+
+    def truncate_text_to_tokens(self, text: str, max_tokens: int) -> str:
+        """Truncates text to a maximum number of tokens."""
+        encoding = tiktoken.get_encoding("cl100k_base")
+        tokens = encoding.encode(text)
+        if len(tokens) <= max_tokens:
+            return text
+        truncated_tokens = tokens[:max_tokens]
+        return encoding.decode(truncated_tokens)
+
+    def _get_daily_spend(self) -> float:
+        import datetime
+        import json
+        path = ".daily_spend.json"
+        today = datetime.date.today().isoformat()
+        if not os.path.exists(path):
+            return 0.0
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("date") == today:
+                return float(data.get("spend", 0.0))
+        except Exception:
+            pass
+        return 0.0
+
+    def _add_to_daily_spend(self, cost: float) -> None:
+        import datetime
+        import json
+        path = ".daily_spend.json"
+        today = datetime.date.today().isoformat()
+        spend = self._get_daily_spend() + cost
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump({"date": today, "spend": spend}, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to save daily spend: {e}")

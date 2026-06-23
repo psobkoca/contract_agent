@@ -27,6 +27,7 @@ class LLMConfig(BaseModel):
     provider: str = "anthropic"
     model: str = "claude-sonnet-4-20250514"
     max_tokens: int = 1500
+    daily_spend_limit: float = 50.00
 
 class ParsingConfig(BaseModel):
     min_clause_chars: int = 80

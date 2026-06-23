@@ -7,5 +7,7 @@ models/
 *.log
 vector_store/
 .coverage
+.daily_spend.json
+
 
 
