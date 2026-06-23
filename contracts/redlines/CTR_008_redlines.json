@@ -1,12 +1,1 @@
-[
-  {
-    "clause_id": "CTR_008_CLS_007",
-    "section_number": "6. Indemnification",
-    "raw_text": "Vendor shall defend, indemnify, and hold harmless Buyer and its affiliates from and against any third-party claims, liabilities, or losses arising out of: (a) any defect in the Products; or (b) any infringement of intellectual property rights by the Products.",
-    "clause_type": "Indemnification",
-    "risk_score": 0.2766615212758382,
-    "disclaimer": "Disclaimer: This is a generated legal redline suggestions draft and does not constitute formal legal advice. Please review with qualified counsel.",
-    "suggested_redline": "INDEMNIFICATION ALLOCATION BOILERPLATE\nDOCUMENT ID: PRC_010\nTYPE: Clause Template\nCATEGORY: Indemnification\n\nSECTION 8: MUTUAL INDEMNIFICATION\n8.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Client from any third-party claims alleging that the software infringes any patent or copyright.\n8.2 Client Indemnity. Client shall defend, indemnify, and hold harmless Provider from any claims arising out of Client's breach of law or customer data infringement.\n8.3 Conditions. Indemnification is conditioned on prompt notice and sole control of the defense.",
-    "explanation": "RAG Fallback suggestions: Proposing revision based on market precedent from PRC_010.txt (Indemnification Risk Allocation Guide) due to an LLM timeout or structured parsing exception."
-  }
-]
+[]

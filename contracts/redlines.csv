@@ -1,0 +1,27 @@
+contract_id,clause_id,original_text,suggested_redline,rationale,negotiation_priority,fallback_mode
+CTR_006,CTR_006_CLS_002,"Provider hereby grants Customer a non-exclusive, non-transferable, revocable license to access and use the software-as-a-service platform (the ""Service"") solely for Customer's internal business operations during the subscription term.","SOFTWARE EULA TEMPLATE
+DOCUMENT ID: PRC_016
+TYPE: Clause Template
+CATEGORY: Intellectual Property
+
+SECTION 1: LICENSE GRANT
+Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
+
+SECTION 2: LICENSE RESTRICTIONS
+Licensee shall not:
+- Reverse engineer, decompile, or disassemble the Software.
+- Copy, modify, or create derivative works.
+- Rent, lease, or distribute the Software to third parties.",Fallback Mode: suggestion generated from standard precedent PRC_016.txt (Software End-User License Agreement (EULA) Template).,MUST_CHANGE,True
+CTR_005,CTR_005_CLS_002,"Provider hereby grants Customer a non-exclusive, non-transferable, revocable license to access and use the software-as-a-service platform (the ""Service"") solely for Customer's internal business operations during the subscription term.","SOFTWARE EULA TEMPLATE
+DOCUMENT ID: PRC_016
+TYPE: Clause Template
+CATEGORY: Intellectual Property
+
+SECTION 1: LICENSE GRANT
+Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
+
+SECTION 2: LICENSE RESTRICTIONS
+Licensee shall not:
+- Reverse engineer, decompile, or disassemble the Software.
+- Copy, modify, or create derivative works.
+- Rent, lease, or distribute the Software to third parties.",Fallback Mode: suggestion generated from standard precedent PRC_016.txt (Software End-User License Agreement (EULA) Template).,MUST_CHANGE,True

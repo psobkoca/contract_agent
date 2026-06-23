@@ -1,11 +1,11 @@
 contract_id,contract_type,counterparty_name,governing_law,contract_value_usd,risk_score,risk_tier
-CTR_007,Vendor,Titanium Manufacturing Partners LLC,Ohio,150000.0,0.3676,REVIEW_REQUIRED
-CTR_005,SaaS,Global Freight Logistics Corp,Texas,60000.0,0.3238,LOW_RISK
-CTR_008,Vendor,EcoPack Packaging Supplies LLC,Oregon,45000.0,0.3038,LOW_RISK
-CTR_010,Partnership,MetroGreen Mobility LLC,Illinois,0.0,0.2985,LOW_RISK
-CTR_009,Partnership,Vanguard Gaming Labs Inc.,Nevada,0.0,0.2931,LOW_RISK
-CTR_006,SaaS,TalentAcquire International Inc.,Washington,14400.0,0.2779,LOW_RISK
-CTR_004,MSA,Vertex E-Commerce Corp,California,120000.0,0.2477,LOW_RISK
-CTR_002,NDA,Aurora Pharmaceuticals Inc.,Massachusetts,0.0,0.2039,LOW_RISK
-CTR_003,MSA,Apex FinTech Solutions Inc.,New York,75000.0,0.1941,LOW_RISK
-CTR_001,NDA,Zephyr Robotics Inc.,Delaware,0.0,0.1671,LOW_RISK
+CTR_007,Vendor,Titanium Manufacturing Partners LLC,Ohio,150000.0,0.36757165729999547,REVIEW_REQUIRED
+CTR_005,SaaS,Global Freight Logistics Corp,Texas,60000.0,0.3237725831894647,LOW_RISK
+CTR_008,Vendor,EcoPack Packaging Supplies LLC,Oregon,45000.0,0.3037504024770525,LOW_RISK
+CTR_010,Partnership,MetroGreen Mobility LLC,Illinois,0.0,0.29845856927059317,LOW_RISK
+CTR_009,Partnership,Vanguard Gaming Labs Inc.,Nevada,0.0,0.2931052549680074,LOW_RISK
+CTR_006,SaaS,TalentAcquire International Inc.,Washington,14400.0,0.27785378783349635,LOW_RISK
+CTR_004,MSA,Vertex E-Commerce Corp,California,120000.0,0.2476943765657919,LOW_RISK
+CTR_002,NDA,Aurora Pharmaceuticals Inc.,Massachusetts,0.0,0.20394617259502412,LOW_RISK
+CTR_003,MSA,Apex FinTech Solutions Inc.,New York,75000.0,0.1940865268309911,LOW_RISK
+CTR_001,NDA,Zephyr Robotics Inc.,Delaware,0.0,0.16705257429963066,LOW_RISK
