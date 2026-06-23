@@ -54,3 +54,26 @@ def test_parse_unsupported_format():
     finally:
         if os.path.exists(filepath):
             os.remove(filepath)
+
+
+def test_parser_main_cli(tmp_path):
+    import sys
+    from unittest.mock import patch
+    import contract_parser
+    
+    out_json = tmp_path / "parser_out.json"
+    
+    test_args = [
+        "contract_parser.py",
+        "--contract", "contracts/CTR_001.pdf",
+        "--output", str(out_json)
+    ]
+    
+    with patch.object(sys, "argv", test_args):
+        try:
+            contract_parser.main()
+        except SystemExit as se:
+            assert se.code == 0
+            
+    assert os.path.exists(out_json)
+

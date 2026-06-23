@@ -12,6 +12,7 @@ from agent import ContractAgent, LLMResponse
 import prompts
 from rag_engine import RAGEngine
 from risk_scorer import RiskScorer
+from reporter import Reporter
 
 # Mock classes for Anthropic response structure
 class MockUsage:
@@ -217,3 +218,318 @@ def test_review_all_10_contracts():
             assert len(redline["redline_rationale"]) > 0
             
         print(f"Contract {contract_id}: reviewed {len(redlines)} high-risk clauses.")
+
+
+# 7. Test Edge Cases & Pipeline Coverage
+
+def test_zero_high_critical_clauses():
+    # Test a contract with zero high/critical clauses.
+    # It should skip LLM reviews and generate valid logs/reports.
+    agent = ContractAgent()
+    
+    # Mock RiskScorer.score_clause so it always returns LOW risk (tier="LOW", score=0.1)
+    mock_scorer = MagicMock()
+    mock_scorer.score_clause.return_value = {
+        "final_score": 0.1,
+        "one_sidedness_score": 0.0,
+        "market_deviation_score": 0.0,
+        "jurisdiction_risk_score": 0.1,
+        "value_risk_score": 0.0
+    }
+    mock_scorer.clause_type_weights = {} # No overrides
+    agent.risk_scorer = mock_scorer
+    
+    # We will pass a real contract but because it has low risk, review_contract should return []
+    redlines = agent.review_contract("contracts/CTR_001.pdf")
+    assert redlines == []
+
+
+def test_reporter_with_zero_clauses(tmp_path):
+    # Initialize reporter with a temp dir
+    reporter = Reporter(run_id="test_zero_run")
+    reporter.output_dir = str(tmp_path)
+    
+    contract_review_logs = [{
+        "contract_id": "CTR_001",
+        "counterparty_name": "ACME",
+        "run_timestamp": "2026-06-23T00:00:00Z",
+        "contract_summary": "Summary of contract CTR_001.",
+        "total_clauses": 5,
+        "clauses_reviewed_by_llm": 0,
+        "risk_tier_distribution": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 5},
+        "redlines": [],
+        "loop_count": 0,
+        "fallback_mode": False,
+        "latency_ms": 0
+    }]
+    
+    scored_contracts_clauses = {
+        "CTR_001": []
+    }
+    
+    scorecard_data = [{
+        "contract_id": "CTR_001",
+        "contract_type": "NDA",
+        "counterparty_name": "ACME",
+        "governing_law": "Delaware",
+        "contract_value_usd": 10000.0,
+        "risk_score": 0.15,
+        "risk_tier": "LOW"
+    }]
+    
+    md_path = reporter.generate_markdown_memo(contract_review_logs, scored_contracts_clauses, scorecard_data)
+    json_path = reporter.generate_json_log(contract_review_logs[0])
+    csv_path = reporter.generate_csv_redlines([])
+    
+    # Assert MD file exists and has disclaimer at top and bottom
+    assert os.path.exists(md_path)
+    with open(md_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    disclaimer = prompts.DISCLAIMER_TEXT.strip()
+    
+    # Disclaimer should appear at least twice (top and bottom)
+    assert content.count(disclaimer) >= 2
+    assert content.startswith("> [!IMPORTANT]")
+    assert content.strip().endswith(disclaimer)
+    assert "*No HIGH or CRITICAL risk clauses were reviewed for this contract.*" in content
+    
+    # Assert JSON log exists
+    assert os.path.exists(json_path)
+    # Assert CSV redlines exists
+    assert os.path.exists(csv_path)
+
+
+@patch("anthropic.Anthropic")
+def test_llm_timeout_triggers_fallback(mock_anthropic):
+    # Setup mock anthropic client that raises APITimeoutError
+    mock_instance = MagicMock()
+    mock_anthropic.return_value = mock_instance
+    
+    mock_request = MagicMock()
+    mock_response = MagicMock()
+    mock_response.status_code = 408
+    
+    timeout_err = anthropic.APITimeoutError(
+        request=mock_request
+    )
+    mock_instance.messages.create.side_effect = timeout_err
+    
+    # Force LLMClient to fail with APITimeoutError
+    client = LLMClient(api_key="dummy_key")
+    # Set max attempts to 1 to speed up test
+    with patch.object(client, "create_message", side_effect=timeout_err):
+        agent = ContractAgent(llm_client=client)
+        
+        clause = Clause(
+            clause_id="TEST_TIMEOUT_CLS_01",
+            raw_text="The contractor shall indemnify the client for any and all claims.",
+            governing_law_jurisdiction="California",
+            contract_value_usd=50000.0,
+            clause_type="Indemnification",
+            risk_flag="HIGH_RISK"
+        )
+        
+        # This should trigger _rag_fallback
+        res = agent.review_clause(clause)
+        
+        assert res.fallback_mode is True
+        assert res.legal_disclaimer == prompts.DISCLAIMER_TEXT
+        assert "Fallback Mode:" in res.redline_rationale
+
+
+def test_clause_no_matching_precedent():
+    agent = ContractAgent()
+    
+    # Mock RAGEngine.hybrid_search to return empty list
+    mock_rag = MagicMock()
+    mock_rag.hybrid_search.return_value = []
+    agent.rag_engine = mock_rag
+    
+    # Mock LLMClient to return a normal JSON response
+    mock_client = MagicMock()
+    agent.llm_client = mock_client
+    
+    expected_response = json.dumps({
+        "original_clause_summary": "Original summary.",
+        "redlined_clause": "Original raw text proposed.",
+        "redline_rationale": "No precedents found, standard language accepted.",
+        "negotiation_priority": "NICE_TO_HAVE",
+        "walk_away_trigger": "None.",
+        "confidence_score": 0.95,
+        "legal_disclaimer": prompts.DISCLAIMER_TEXT
+    })
+    mock_client.create_message.return_value = MockMessage(content=[MockTextBlock(expected_response)])
+    
+    clause = Clause(
+        clause_id="TEST_NOPREC_CLS_01",
+        raw_text="Random custom clause text.",
+        governing_law_jurisdiction="Delaware",
+        contract_value_usd=0.0,
+        clause_type="Miscellaneous",
+        risk_flag="HIGH_RISK"
+    )
+    
+    res = agent.review_clause(clause)
+    
+    assert res.redlined_clause == "Original raw text proposed."
+    assert "No precedents found" in res.redline_rationale
+    
+    # Now verify the user prompt sent to LLM contains "No precedents found."
+    call_args = mock_client.create_message.call_args[1]
+    messages = call_args["messages"]
+    user_prompt = messages[0]["content"]
+    assert "No precedents found." in user_prompt
+
+
+def test_disclaimer_presence_assertion_across_reports(tmp_path):
+    reporter = Reporter(run_id="test_run_disclaimer")
+    reporter.output_dir = str(tmp_path)
+    
+    contract_review_logs = [{
+        "contract_id": "CTR_001",
+        "counterparty_name": "ACME",
+        "run_timestamp": "2026-06-23T00:00:00Z",
+        "contract_summary": "Summary of contract CTR_001.",
+        "total_clauses": 5,
+        "clauses_reviewed_by_llm": 1,
+        "risk_tier_distribution": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 2},
+        "redlines": [{
+            "clause_id": "CTR_001_CLS_01",
+            "section_number": "1. Liability",
+            "raw_text": "Clause text",
+            "clause_type": "Liability",
+            "risk_score": 0.6,
+            "risk_tier": "HIGH",
+            "original_clause_summary": "Summary",
+            "redlined_clause": "Redline",
+            "redline_rationale": "Rationale",
+            "negotiation_priority": "MUST_CHANGE",
+            "walk_away_trigger": "Trigger",
+            "confidence_score": 0.8,
+            "legal_disclaimer": prompts.DISCLAIMER_TEXT,
+            "fallback_mode": False,
+            "precedent_citations": ["file1 - title1"]
+        }],
+        "loop_count": 1,
+        "fallback_mode": False,
+        "latency_ms": 100
+    }]
+    
+    scored_contracts_clauses = {
+        "CTR_001": [
+            {
+                "clause": Clause(
+                    clause_id="CTR_001_CLS_01",
+                    raw_text="Clause text",
+                    governing_law_jurisdiction="Delaware",
+                    contract_value_usd=10000.0,
+                    clause_type="Liability",
+                    risk_flag="HIGH_RISK"
+                ),
+                "score": 0.6,
+                "tier": "HIGH"
+            }
+        ]
+    }
+    
+    scorecard_data = [{
+        "contract_id": "CTR_001",
+        "contract_type": "NDA",
+        "counterparty_name": "ACME",
+        "governing_law": "Delaware",
+        "contract_value_usd": 10000.0,
+        "risk_score": 0.6,
+        "risk_tier": "HIGH"
+    }]
+    
+    md_path = reporter.generate_markdown_memo(contract_review_logs, scored_contracts_clauses, scorecard_data)
+    
+    assert os.path.exists(md_path)
+    with open(md_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    disclaimer = prompts.DISCLAIMER_TEXT.strip()
+    
+    # 100% Assertion of legal disclaimer presence at top and bottom
+    assert content.count(disclaimer) >= 2
+    assert content.startswith("> [!IMPORTANT]")
+    assert content.strip().endswith(disclaimer)
+
+
+@patch("clause_classifier.ClauseClassifier.predict_sklearn")
+@patch("clause_classifier.ClauseClassifier.predict_nli_fallback")
+@patch("agent.ContractAgent.review_clause")
+def test_run_pipeline_end_to_end(mock_review_clause, mock_nli, mock_sklearn, tmp_path):
+    import csv
+    
+    # Set mock outputs
+    mock_sklearn.return_value = ("Indemnification", 0.85)
+    mock_nli.return_value = ("Liability", 0.75)
+    
+    mock_review_clause.return_value = LLMResponse(
+        original_clause_summary="Mock summary",
+        redlined_clause="Mock redline text",
+        redline_rationale="Mock rationale",
+        negotiation_priority="MUST_CHANGE",
+        walk_away_trigger="Mock walk away",
+        confidence_score=0.9,
+        legal_disclaimer=prompts.DISCLAIMER_TEXT,
+        fallback_mode=False,
+        loop_count=1,
+        latency_ms=150
+    )
+    
+    # Override report dir in config to tmp_path
+    from config import config
+    original_report_dir = config.output.report_dir
+    config.output.report_dir = str(tmp_path)
+    
+    try:
+        # Run pipeline with a specific contract
+        import main
+        main.run_pipeline(
+            contract_path="contracts/CTR_001.pdf",
+            run_id="test_pipeline_run"
+        )
+        
+        # Verify the 4 output reports are generated in tmp_path
+        json_log = os.path.join(tmp_path, "test_pipeline_run.json")
+        markdown_memo = os.path.join(tmp_path, "test_pipeline_run.md")
+        redlines_csv = os.path.join(tmp_path, "redlines.csv")
+        scorecard_csv = os.path.join(tmp_path, "risk_scorecard.csv")
+        
+        assert os.path.exists(json_log), "JSON log should exist"
+        assert os.path.exists(markdown_memo), "Markdown memo should exist"
+        assert os.path.exists(redlines_csv), "Redlines CSV should exist"
+        assert os.path.exists(scorecard_csv), "Scorecard CSV should exist"
+        
+        # Read and check JSON log content
+        with open(json_log, "r", encoding="utf-8") as f:
+            log_data = json.load(f)
+        assert log_data["contract_id"] == "CTR_001"
+        assert log_data["clauses_reviewed_by_llm"] > 0
+        assert log_data["loop_count"] > 0
+        assert log_data["latency_ms"] > 0
+        
+        # Read and check Markdown memo disclaimer
+        with open(markdown_memo, "r", encoding="utf-8") as f:
+            memo_content = f.read()
+        assert prompts.DISCLAIMER_TEXT.strip() in memo_content
+        assert memo_content.count(prompts.DISCLAIMER_TEXT.strip()) >= 2
+        
+        # Read CSV redlines and check headers and contents
+        with open(redlines_csv, "r", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            headers = next(reader)
+            assert headers == [
+                "clause_id", "section_number", "clause_type", "risk_tier",
+                "risk_score", "negotiation_priority", "walk_away_trigger", "redlined_clause_excerpt"
+            ]
+            rows = list(reader)
+            assert len(rows) > 0
+            assert "CTR_001" in rows[0][0]
+            
+    finally:
+        config.output.report_dir = original_report_dir
+

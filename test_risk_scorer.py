@@ -119,3 +119,24 @@ def test_clause_type_weight_loading(scorer):
     assert scorer.clause_type_weights["Confidentiality"]["type_weight"] == 0.5
     assert scorer.clause_type_weights["Confidentiality"]["review_required"] is False
     assert scorer.clause_type_weights["Confidentiality"]["our_role_bias"] == "CLIENT"
+
+
+def test_risk_scorer_main_cli(tmp_path):
+    import sys
+    import os
+    from unittest.mock import patch
+    import risk_scorer
+    
+    out_csv = tmp_path / "risk_scorecard_out.csv"
+    
+    test_args = [
+        "risk_scorer.py",
+        "--contracts_dir", "contracts",
+        "--output", str(out_csv)
+    ]
+    
+    with patch.object(sys, "argv", test_args):
+        risk_scorer.main()
+        
+    assert os.path.exists(out_csv)
+
