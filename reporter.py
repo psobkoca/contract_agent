@@ -1,0 +1,225 @@
+import os
+import sys
+import csv
+import json
+from typing import List, Dict, Any
+from loguru import logger
+from tabulate import tabulate
+
+import prompts
+
+def setup_dual_logging() -> None:
+    """Configures loguru to log to stdout, agent.log (all), and critical_clauses.log (only critical events)."""
+    # Remove existing default handlers
+    logger.remove()
+    
+    # 1. Console Output
+    logger.add(
+        sys.stdout,
+        level="INFO",
+        format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>"
+    )
+    
+    # 2. agent.log (All logs)
+    logger.add(
+        "agent.log",
+        rotation="10 MB",
+        level="DEBUG",
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}"
+    )
+    
+    # 3. critical_clauses.log (Only logs with extra is_critical=True or containing CRITICAL)
+    logger.add(
+        "critical_clauses.log",
+        rotation="10 MB",
+        level="WARNING",
+        filter=lambda r: r["extra"].get("is_critical") is True or "CRITICAL RISK" in r["message"],
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}"
+    )
+    
+    logger.info("Dual logging system successfully initialized.")
+
+class Reporter:
+    """Generates run execution reports: JSON logs, Markdown memos, CSV scorecards, and CLI tables."""
+    
+    def __init__(self, run_id: str = "run_latest"):
+        self.run_id = run_id
+        self.output_dir = "contracts"
+        os.makedirs(self.output_dir, exist_ok=True)
+        
+    def generate_all_reports(self, run_data: List[Dict[str, Any]], scorecard_data: List[Dict[str, Any]]) -> None:
+        """Generates all 4 reports: JSON review log, MD memo, CSV scorecard, CSV redlines, and displays summary."""
+        self.generate_json_log(run_data)
+        self.generate_markdown_memo(run_data)
+        self.generate_csv_scorecard(scorecard_data)
+        self.generate_csv_redlines(run_data)
+        self.display_cli_summary(run_data, scorecard_data)
+
+    def generate_json_log(self, run_data: List[Dict[str, Any]]) -> str:
+        """Saves a detailed JSON review log containing all analyzed clauses and suggestions."""
+        filename = f"review_log_{self.run_id}.json"
+        path = os.path.join(self.output_dir, filename)
+        
+        try:
+            with open(path, mode="w", encoding="utf-8") as f:
+                json.dump(run_data, f, indent=2)
+            logger.success(f"JSON review log exported to {path}")
+        except Exception as e:
+            logger.error(f"Failed to generate JSON review log: {e}")
+        return path
+
+    def generate_markdown_memo(self, run_data: List[Dict[str, Any]]) -> str:
+        """Generates a Markdown review memo, including double disclaimer and CRITICAL RISK ALERT if needed."""
+        filename = f"contract_review_memo_{self.run_id}.md"
+        path = os.path.join(self.output_dir, filename)
+        
+        # Check if there are any critical risk clauses
+        has_critical = any(c.get("risk_tier") == "CRITICAL" for c in run_data)
+        
+        try:
+            with open(path, mode="w", encoding="utf-8") as f:
+                # Top Disclaimer
+                f.write(f"> [!IMPORTANT]\n> **LEGAL DISCLAIMER**:\n> {prompts.DISCLAIMER_TEXT}\n\n")
+                
+                # Critical Risk Alert Header
+                if has_critical:
+                    f.write("# ⚠️ CRITICAL RISK ALERT\n")
+                    f.write("> **WARNING**: This contract contains one or more **CRITICAL-tier** risk clauses. "
+                            "These provisions present severe legal exposure and MUST be negotiated and approved "
+                            "before execution. Details are provided below.\n\n")
+                    
+                f.write("# Contract Review & Negotiation Memo\n")
+                f.write("This document summarizes the contract clause revisions suggested by the AI agent.\n\n")
+                
+                f.write("## Reviewed Clauses Summary\n")
+                
+                for idx, c in enumerate(run_data):
+                    tier = c.get("risk_tier", "HIGH")
+                    tier_str = f"**{tier} RISK**" if tier == "HIGH" else f"🚨 **{tier} RISK**"
+                    
+                    f.write(f"### {idx+1}. Clause ID: {c['clause_id']} (Section: {c['section_number']})\n")
+                    f.write(f"- **Clause Type**: {c['clause_type']}\n")
+                    f.write(f"- **Risk Level**: {tier_str} (Score: {c['risk_score']:.4f})\n")
+                    f.write(f"- **Negotiation Priority**: `{c['negotiation_priority']}`\n")
+                    if c.get("fallback_mode") is True:
+                        f.write("- **Mode**: `FALLBACK_MODE` ⚠️\n")
+                    f.write("\n")
+                    
+                    f.write("#### Original Text:\n")
+                    f.write(f"```text\n{c['raw_text']}\n```\n\n")
+                    
+                    f.write("#### Suggested Redline:\n")
+                    f.write(f"```text\n{c['redlined_clause']}\n```\n\n")
+                    
+                    f.write("#### Rationale & Walk-Away Trigger:\n")
+                    f.write(f"**Rationale**: {c['redline_rationale']}\n\n")
+                    f.write(f"**Walk-away Trigger**: {c['walk_away_trigger']}\n\n")
+                    f.write("---\n\n")
+                    
+                # Bottom Disclaimer
+                f.write(f"\n> [!IMPORTANT]\n> **LEGAL DISCLAIMER**:\n> {prompts.DISCLAIMER_TEXT}\n")
+                
+            logger.success(f"Markdown review memo exported to {path}")
+        except Exception as e:
+            logger.error(f"Failed to generate Markdown review memo: {e}")
+        return path
+
+    def generate_csv_scorecard(self, scorecard_data: List[Dict[str, Any]]) -> str:
+        """Generates the scorecard CSV containing contract-level risk scores sorted by score descending."""
+        path = os.path.join(self.output_dir, "risk_scorecard.csv")
+        
+        # Sort by risk score descending
+        sorted_scorecard = sorted(scorecard_data, key=lambda x: x["risk_score"], reverse=True)
+        
+        try:
+            with open(path, mode="w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=[
+                    "contract_id", "contract_type", "counterparty_name", "governing_law", 
+                    "contract_value_usd", "risk_score", "risk_tier"
+                ])
+                writer.writeheader()
+                for row in sorted_scorecard:
+                    writer.writerow(row)
+            logger.success(f"CSV scorecard exported to {path}")
+        except Exception as e:
+            logger.error(f"Failed to generate CSV scorecard: {e}")
+        return path
+
+    def generate_csv_redlines(self, run_data: List[Dict[str, Any]]) -> str:
+        """Generates redlines.csv containing clause-level suggestions and flags."""
+        path = os.path.join(self.output_dir, "redlines.csv")
+        
+        try:
+            with open(path, mode="w", encoding="utf-8", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=[
+                    "contract_id", "clause_id", "original_text", "suggested_redline", 
+                    "rationale", "negotiation_priority", "fallback_mode"
+                ])
+                writer.writeheader()
+                for c in run_data:
+                    # Extract contract_id from clause_id (e.g. CTR_003_CLS_006 -> CTR_003)
+                    contract_id = c["clause_id"].split("_CLS_")[0] if "_CLS_" in c["clause_id"] else "Unknown"
+                    writer.writerow({
+                        "contract_id": contract_id,
+                        "clause_id": c["clause_id"],
+                        "original_text": c["raw_text"],
+                        "suggested_redline": c["redlined_clause"],
+                        "rationale": c["redline_rationale"],
+                        "negotiation_priority": c["negotiation_priority"],
+                        "fallback_mode": c.get("fallback_mode", False)
+                    })
+            logger.success(f"CSV redlines exported to {path}")
+        except Exception as e:
+            logger.error(f"Failed to generate CSV redlines: {e}")
+        return path
+
+    def display_cli_summary(self, run_data: List[Dict[str, Any]], scorecard_data: List[Dict[str, Any]]) -> None:
+        """Prints clean summary tables to the console."""
+        print("\n" + "=" * 80)
+        print("CONTRACT AUDIT SUMMARY".center(80))
+        print("=" * 80)
+        
+        # 1. Contract Scorecard Table
+        scorecard_rows = []
+        for s in scorecard_data:
+            scorecard_rows.append([
+                s["contract_id"],
+                s["counterparty_name"],
+                s["risk_tier"],
+                f"{s['risk_score']:.4f}",
+                f"${s['contract_value_usd']:,.2f}"
+            ])
+            
+        print("\n--- CONTRACT RISK SCORECARD ---")
+        print(tabulate(
+            scorecard_rows,
+            headers=["Contract ID", "Counterparty", "Tier", "Risk Score", "Value (USD)"],
+            tablefmt="grid"
+        ))
+        
+        # 2. Critical/High Clauses Reviewed Table
+        clause_rows = []
+        for c in run_data:
+            contract_id = c["clause_id"].split("_CLS_")[0] if "_CLS_" in c["clause_id"] else "Unknown"
+            mode = "FALLBACK" if c.get("fallback_mode") is True else "LLM"
+            clause_rows.append([
+                c["clause_id"],
+                contract_id,
+                c["clause_type"],
+                c["risk_tier"],
+                f"{c['risk_score']:.4f}",
+                c["negotiation_priority"],
+                mode
+            ])
+            
+        print("\n--- CRITICAL / HIGH CLAUSES REVIEW SUGGESTIONS ---")
+        if clause_rows:
+            print(tabulate(
+                clause_rows,
+                headers=["Clause ID", "Contract", "Type", "Tier", "Score", "Priority", "Mode"],
+                tablefmt="grid"
+            ))
+        else:
+            print("No CRITICAL or HIGH risk clauses were detected or reviewed.")
+            
+        print("\n" + "=" * 80 + "\n")
