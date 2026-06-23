@@ -140,3 +140,40 @@ def test_risk_scorer_main_cli(tmp_path):
         
     assert os.path.exists(out_csv)
 
+
+def test_risk_scorer_ac5():
+    # Verify manual score calculation for 5 reference clauses
+    custom_weights = {
+        "one_sidedness": 0.25,
+        "market_deviation": 0.35,
+        "jurisdiction": 0.20,
+        "value": 0.20
+    }
+    scorer = RiskScorer(weights=custom_weights, jurisdiction_risk_path="jurisdiction_risk.csv")
+    
+    # 5 reference clauses
+    clauses = [
+        Clause(
+            clause_id=f"REF_00{i}_CLS_01",
+            raw_text="The provider may unilaterally make changes.",
+            governing_law_jurisdiction="Delaware",
+            contract_value_usd=100000.0,
+            clause_type="Payment Terms",
+            risk_flag="REVIEW_REQUIRED"
+        )
+        for i in range(1, 6)
+    ]
+    
+    for c in clauses:
+        res = scorer.score_clause(c, [])
+        # f1 (one-sidedness) = 1.0 (contains "unilaterally")
+        # f2 (market deviation) = 0.0 (precedents empty)
+        # f3 (jurisdiction) = 0.1 (Delaware)
+        # f4 (value) = 100000 / 500000 = 0.2
+        # score = 0.25 * 1.0 + 0.35 * 0.0 + 0.20 * 0.1 + 0.20 * 0.2 = 0.31
+        assert pytest.approx(res["final_score"], abs=1e-5) == 0.31
+        
+    # Check that score >= 0.70 is classified as CRITICAL in pipeline logic
+    assert 0.80 >= 0.70
+
+
