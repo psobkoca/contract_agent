@@ -19,6 +19,7 @@ class LLMClient:
     
     # Model pricing per token
     PRICING = {
+        "claude-sonnet-4-20250514": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000},
         "claude-3-5-sonnet-20241022": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000},
         "default": {"input": 3.0 / 1_000_000, "output": 15.0 / 1_000_000}
     }
@@ -26,7 +27,7 @@ class LLMClient:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "claude-3-5-sonnet-20241022",
+        model: str = "claude-sonnet-4-20250514",
         token_limit: int = 2000
     ):
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
