@@ -1,0 +1,11 @@
+contract_id,contract_type,counterparty_name,governing_law,effective_date,contract_value_usd,our_role,review_priority
+CTR_001,NDA,Zephyr Robotics Inc.,Delaware,2026-01-15,0.0,CLIENT,MEDIUM
+CTR_002,NDA,Aurora Pharmaceuticals Inc.,Massachusetts,2026-02-12,0.0,CLIENT,LOW
+CTR_003,MSA,Apex FinTech Solutions Inc.,New York,2026-03-01,75000.0,SERVICE_PROVIDER,HIGH
+CTR_004,MSA,Vertex E-Commerce Corp,California,2026-03-20,120000.0,SERVICE_PROVIDER,URGENT
+CTR_005,SaaS,Global Freight Logistics Corp,Texas,2026-04-05,60000.0,LICENSOR,HIGH
+CTR_006,SaaS,TalentAcquire International Inc.,Washington,2026-04-25,14400.0,LICENSOR,LOW
+CTR_007,Vendor,Titanium Manufacturing Partners LLC,Ohio,2026-05-08,150000.0,BUYER,MEDIUM
+CTR_008,Vendor,EcoPack Packaging Supplies LLC,Oregon,2026-05-18,45000.0,BUYER,LOW
+CTR_009,Partnership,Vanguard Gaming Labs Inc.,Nevada,2026-06-01,0.0,CLIENT,MEDIUM
+CTR_010,Partnership,MetroGreen Mobility LLC,Illinois,2026-06-15,0.0,CLIENT,HIGH
