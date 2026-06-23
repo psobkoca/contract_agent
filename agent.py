@@ -28,7 +28,7 @@ class LLMResponse(BaseModel):
     @field_validator("legal_disclaimer")
     @classmethod
     def validate_disclaimer_verbatim(cls, value: str) -> str:
-        if value.strip() != prompts.DISCLAIMER_TEXT.strip():
+        if value != prompts.DISCLAIMER_TEXT:
             raise ValueError(f"Disclaimer text mismatch. Expected: '{prompts.DISCLAIMER_TEXT}'")
         return value
 
