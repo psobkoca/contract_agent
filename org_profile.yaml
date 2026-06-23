@@ -1,0 +1,12 @@
+org_profile:
+  org_name: "Apex Legal Systems Inc."
+  industry_sector: "Technology & Software Services"
+  standard_negotiation_positions:
+    Liability: "Limit aggregate liability to fees paid in the preceding 12 months, and disclaim indirect/consequential damages."
+    Indemnification: "Limit IP infringement indemnity to direct claims and exclude consequential damages."
+    IP: "Retain ownership of pre-existing intellectual property and license deliverables non-exclusively."
+    Payment: "Require net 30 payment terms and standard late fee exclusions."
+  preferred_jurisdictions:
+    - Delaware
+    - New York
+    - Massachusetts

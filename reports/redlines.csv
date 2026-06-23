@@ -1,0 +1,84 @@
+contract_id,clause_id,original_text,suggested_redline,rationale,negotiation_priority,fallback_mode
+CTR_006,CTR_006_CLS_002,"Provider hereby grants Customer a non-exclusive, non-transferable, revocable license to access and use the software-as-a-service platform (the ""Service"") solely for Customer's internal business operations during the subscription term.","SOFTWARE EULA TEMPLATE
+DOCUMENT ID: PRC_016
+TYPE: Clause Template
+CATEGORY: Intellectual Property
+
+SECTION 1: LICENSE GRANT
+Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
+
+SECTION 2: LICENSE RESTRICTIONS
+Licensee shall not:
+- Reverse engineer, decompile, or disassemble the Software.
+- Copy, modify, or create derivative works.
+- Rent, lease, or distribute the Software to third parties.",Fallback Mode: suggestion generated from standard precedent PRC_016.txt (Software End-User License Agreement (EULA) Template).,MUST_CHANGE,True
+CTR_006,CTR_006_CLS_007,"PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL NOT EXCEED THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE INCIDENT GIVING RISE TO LIABILITY.","LIMITATION OF LIABILITY PLAYBOOK
+DOCUMENT ID: PRC_003
+TYPE: Negotiation Playbook
+CATEGORY: Limitation of Liability
+
+NEGO-RULES:
+Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
+Rule 2: Cap total liability at 12 months fees paid.
+Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
+
+FALLBACK POSITIONS:
+- Fallback 1: Cap at 2x annual contract value.
+- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",Fallback Mode: suggestion generated from standard precedent PRC_003.txt (Limitation of Liability Negotiation Playbook).,MUST_CHANGE,True
+CTR_005,CTR_005_CLS_002,"Provider hereby grants Customer a non-exclusive, non-transferable, revocable license to access and use the software-as-a-service platform (the ""Service"") solely for Customer's internal business operations during the subscription term.","SOFTWARE EULA TEMPLATE
+DOCUMENT ID: PRC_016
+TYPE: Clause Template
+CATEGORY: Intellectual Property
+
+SECTION 1: LICENSE GRANT
+Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
+
+SECTION 2: LICENSE RESTRICTIONS
+Licensee shall not:
+- Reverse engineer, decompile, or disassemble the Software.
+- Copy, modify, or create derivative works.
+- Rent, lease, or distribute the Software to third parties.",Fallback Mode: suggestion generated from standard precedent PRC_016.txt (Software End-User License Agreement (EULA) Template).,MUST_CHANGE,True
+CTR_005,CTR_005_CLS_007,"PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL NOT EXCEED THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE INCIDENT GIVING RISE TO LIABILITY.","LIMITATION OF LIABILITY PLAYBOOK
+DOCUMENT ID: PRC_003
+TYPE: Negotiation Playbook
+CATEGORY: Limitation of Liability
+
+NEGO-RULES:
+Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
+Rule 2: Cap total liability at 12 months fees paid.
+Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
+
+FALLBACK POSITIONS:
+- Fallback 1: Cap at 2x annual contract value.
+- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",Fallback Mode: suggestion generated from standard precedent PRC_003.txt (Limitation of Liability Negotiation Playbook).,MUST_CHANGE,True
+CTR_007,CTR_007_CLS_007,"Vendor shall defend, indemnify, and hold harmless Buyer and its affiliates from and against any third-party claims, liabilities, or losses arising out of: (a) any defect in the Products; or (b) any infringement of intellectual property rights by the Products.","INDEMNIFICATION ALLOCATION BOILERPLATE
+DOCUMENT ID: PRC_010
+TYPE: Clause Template
+CATEGORY: Indemnification
+
+SECTION 8: MUTUAL INDEMNIFICATION
+8.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Client from any third-party claims alleging that the software infringes any patent or copyright.
+8.2 Client Indemnity. Client shall defend, indemnify, and hold harmless Provider from any claims arising out of Client's breach of law or customer data infringement.
+8.3 Conditions. Indemnification is conditioned on prompt notice and sole control of the defense.",Fallback Mode: suggestion generated from standard precedent PRC_010.txt (Indemnification Risk Allocation Guide).,MUST_CHANGE,True
+CTR_008,CTR_008_CLS_007,"Vendor shall defend, indemnify, and hold harmless Buyer and its affiliates from and against any third-party claims, liabilities, or losses arising out of: (a) any defect in the Products; or (b) any infringement of intellectual property rights by the Products.","INDEMNIFICATION ALLOCATION BOILERPLATE
+DOCUMENT ID: PRC_010
+TYPE: Clause Template
+CATEGORY: Indemnification
+
+SECTION 8: MUTUAL INDEMNIFICATION
+8.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Client from any third-party claims alleging that the software infringes any patent or copyright.
+8.2 Client Indemnity. Client shall defend, indemnify, and hold harmless Provider from any claims arising out of Client's breach of law or customer data infringement.
+8.3 Conditions. Indemnification is conditioned on prompt notice and sole control of the defense.",Fallback Mode: suggestion generated from standard precedent PRC_010.txt (Indemnification Risk Allocation Guide).,MUST_CHANGE,True
+CTR_004,CTR_004_CLS_006,"IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES. SERVICE PROVIDER'S TOTAL CUMULATIVE LIABILITY UNDER THIS AGREEMENT SHALL NOT EXCEED THE TOTAL FEES PAID BY CLIENT TO SERVICE PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.","LIMITATION OF LIABILITY PLAYBOOK
+DOCUMENT ID: PRC_003
+TYPE: Negotiation Playbook
+CATEGORY: Limitation of Liability
+
+NEGO-RULES:
+Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
+Rule 2: Cap total liability at 12 months fees paid.
+Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
+
+FALLBACK POSITIONS:
+- Fallback 1: Cap at 2x annual contract value.
+- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",Fallback Mode: suggestion generated from standard precedent PRC_003.txt (Limitation of Liability Negotiation Playbook).,MUST_CHANGE,True

@@ -54,7 +54,16 @@ def test_risk_tier_boundaries(scorer):
     assert scorer.classify_tier(0.85) == "HIGH_RISK"
     assert scorer.classify_tier(1.0) == "HIGH_RISK"
 
-def test_clause_score_calculation(scorer):
+def test_clause_score_calculation():
+    # Pass custom weights to test math correctness and fallback handling
+    custom_weights = {
+        "one_sidedness": 0.25,
+        "market_deviation": 0.35,
+        "jurisdiction": 0.20,
+        "value": 0.20
+    }
+    test_scorer = RiskScorer(weights=custom_weights, jurisdiction_risk_path="jurisdiction_risk.csv")
+    
     # Mock a clause and its metadata
     clause = Clause(
         clause_id="TEST_CLS_001",
@@ -78,7 +87,7 @@ def test_clause_score_calculation(scorer):
     # 0.25 * 1.0 + 0.35 * 0.0 + 0.20 * 0.1 + 0.20 * 0.2
     # = 0.25 + 0.0 + 0.02 + 0.04 = 0.31
     
-    res = scorer.score_clause(clause, precedent_passages)
+    res = test_scorer.score_clause(clause, precedent_passages)
     assert res["one_sidedness_score"] == 1.0
     assert res["market_deviation_score"] == 0.0
     assert res["jurisdiction_risk_score"] == 0.1

@@ -20,11 +20,16 @@ def setup_dual_logging() -> None:
         format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>"
     )
     
+    # Load dynamic configurations
+    from config import config
+    log_path = config.output.log_path
+    log_level = config.output.log_level
+    
     # 2. agent.log (All logs)
     logger.add(
-        "agent.log",
+        log_path,
         rotation="10 MB",
-        level="DEBUG",
+        level=log_level,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}"
     )
     
@@ -44,7 +49,8 @@ class Reporter:
     
     def __init__(self, run_id: str = "run_latest"):
         self.run_id = run_id
-        self.output_dir = "contracts"
+        from config import config
+        self.output_dir = config.output.report_dir
         os.makedirs(self.output_dir, exist_ok=True)
         
     def generate_all_reports(self, run_data: List[Dict[str, Any]], scorecard_data: List[Dict[str, Any]]) -> None:

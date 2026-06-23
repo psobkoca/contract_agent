@@ -21,11 +21,11 @@ class RiskScorer:
         jurisdiction_risk_path: str = "jurisdiction_risk.csv"
     ):
         # Configurable weights (defaulting to balanced 4-factor allocation)
-        self.weights = weights or {
-            "one_sidedness": 0.25,
-            "market_deviation": 0.35,
-            "jurisdiction": 0.20,
-            "value": 0.20
+        self.weights = weights or config.risk_scoring.weights or {
+            "type": 0.35,
+            "one_sidedness": 0.30,
+            "market_deviation": 0.25,
+            "jurisdiction": 0.10
         }
         
         # Verify and normalize weights to sum to 1.0
@@ -140,13 +140,24 @@ class RiskScorer:
         f1 = self.calculate_one_sidedness_score(clause.raw_text)
         f2 = self.calculate_market_deviation_score(clause.raw_text, precedent_passages)
         f3 = self.lookup_jurisdiction_risk(clause.governing_law_jurisdiction)
-        f4 = self.calculate_value_risk_score(clause.contract_value_usd)
         
+        # Determine if we use 'type' (from classifier risk flags) or 'value' (from contract USD value)
+        f_type_or_value = 0.0
+        weight_key = "value"
+        if "type" in self.weights:
+            weight_key = "type"
+            if clause.risk_flag == "HIGH_RISK":
+                f_type_or_value = 1.0
+            elif clause.risk_flag == "REVIEW_REQUIRED":
+                f_type_or_value = 0.5
+        else:
+            f_type_or_value = self.calculate_value_risk_score(clause.contract_value_usd)
+            
         score = (
-            self.weights["one_sidedness"] * f1 +
-            self.weights["market_deviation"] * f2 +
-            self.weights["jurisdiction"] * f3 +
-            self.weights["value"] * f4
+            self.weights.get("one_sidedness", 0.0) * f1 +
+            self.weights.get("market_deviation", 0.0) * f2 +
+            self.weights.get("jurisdiction", 0.0) * f3 +
+            self.weights.get(weight_key, 0.0) * f_type_or_value
         )
         
         return {
@@ -157,7 +168,8 @@ class RiskScorer:
             "one_sidedness_score": f1,
             "market_deviation_score": f2,
             "jurisdiction_risk_score": f3,
-            "value_risk_score": f4,
+            "value_risk_score": f_type_or_value if weight_key == "value" else 0.0,
+            "type_risk_score": f_type_or_value if weight_key == "type" else 0.0,
             "final_score": float(score)
         }
 

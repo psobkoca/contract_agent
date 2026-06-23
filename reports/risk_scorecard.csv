@@ -1,0 +1,11 @@
+contract_id,contract_type,counterparty_name,governing_law,contract_value_usd,risk_score,risk_tier
+CTR_005,SaaS,Global Freight Logistics Corp,Texas,60000.0,0.4186130696251279,REVIEW_REQUIRED
+CTR_007,Vendor,Titanium Manufacturing Partners LLC,Ohio,150000.0,0.402551183785711,REVIEW_REQUIRED
+CTR_009,Partnership,Vanguard Gaming Labs Inc.,Nevada,0.0,0.375789467834291,REVIEW_REQUIRED
+CTR_006,SaaS,TalentAcquire International Inc.,Washington,14400.0,0.3699876262302752,REVIEW_REQUIRED
+CTR_008,Vendor,EcoPack Packaging Supplies LLC,Oregon,45000.0,0.36196457319789466,REVIEW_REQUIRED
+CTR_010,Partnership,MetroGreen Mobility LLC,Illinois,0.0,0.3515973907488364,REVIEW_REQUIRED
+CTR_002,NDA,Aurora Pharmaceuticals Inc.,Massachusetts,0.0,0.2672631391551759,LOW_RISK
+CTR_004,MSA,Vertex E-Commerce Corp,California,120000.0,0.26589280865810533,LOW_RISK
+CTR_003,MSA,Apex FinTech Solutions Inc.,New York,75000.0,0.2629189477364222,LOW_RISK
+CTR_001,NDA,Zephyr Robotics Inc.,Delaware,0.0,0.23238449184667495,LOW_RISK
