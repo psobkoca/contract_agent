@@ -207,6 +207,19 @@ def parse_contract(filepath: str) -> List[Clause]:
     else:
         logger.warning(f"Log Warning: contract_id '{contract_id}' not found in metadata registry. Continuing with null metadata.")
         
+    # 4. Clause Classification (Phase 2)
+    logger.info("Initializing Clause Classifier...")
+    from clause_classifier import ClauseClassifier
+    classifier = ClauseClassifier()
+    classifier.init_classifier()
+    
+    logger.info("Classifying clauses and assigning risk flags...")
+    for clause in clauses:
+        pred_class, confidence, _ = classifier.predict_clause(clause.raw_text)
+        clause.clause_type = pred_class
+        clause.confidence = confidence
+        clause.risk_flag = classifier.get_risk_flag(pred_class, confidence)
+        
     return clauses
 
 def main():

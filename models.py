@@ -41,6 +41,20 @@ class Clause(BaseModel):
         None,
         description="The total contract value in USD."
     )
+    
+    # Classification fields
+    clause_type: Optional[str] = Field(
+        None,
+        description="The classified type/category of the clause."
+    )
+    confidence: Optional[float] = Field(
+        None,
+        description="The classification confidence score."
+    )
+    risk_flag: Optional[str] = Field(
+        None,
+        description="The assigned risk rating flag (HIGH_RISK, REVIEW_REQUIRED, LOW_RISK)."
+    )
 
 class ClassifiedClause(BaseModel):
     """Represents a clause that has been classified into a specific legal category."""
