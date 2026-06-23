@@ -1,0 +1,12 @@
+[
+  {
+    "clause_id": "CTR_006_CLS_007",
+    "section_number": "6. Limitation of Liability",
+    "raw_text": "PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL NOT EXCEED THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE INCIDENT GIVING RISE TO LIABILITY.",
+    "clause_type": "Liability",
+    "risk_score": 0.24237412656307217,
+    "disclaimer": "Disclaimer: This is a generated legal redline suggestions draft and does not constitute formal legal advice. Please review with qualified counsel.",
+    "suggested_redline": "LIMITATION OF LIABILITY PLAYBOOK\nDOCUMENT ID: PRC_003\nTYPE: Negotiation Playbook\nCATEGORY: Limitation of Liability\n\nNEGO-RULES:\nRule 1: Always seek to exclude consequential, incidental, and indirect damages.\nRule 2: Cap total liability at 12 months fees paid.\nRule 3: Avoid unlimited liability caps unless required for data security or gross negligence.\n\nFALLBACK POSITIONS:\n- Fallback 1: Cap at 2x annual contract value.\n- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",
+    "explanation": "RAG Fallback suggestions: Proposing revision based on market precedent from PRC_003.txt (Limitation of Liability Negotiation Playbook) due to an LLM timeout or structured parsing exception."
+  }
+]

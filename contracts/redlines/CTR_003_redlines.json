@@ -1,0 +1,12 @@
+[
+  {
+    "clause_id": "CTR_003_CLS_006",
+    "section_number": "5. Limitation of Liability",
+    "raw_text": "IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES. SERVICE PROVIDER'S TOTAL CUMULATIVE LIABILITY UNDER THIS AGREEMENT SHALL NOT EXCEED THE TOTAL FEES PAID BY CLIENT TO SERVICE PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.",
+    "clause_type": "Liability",
+    "risk_score": 0.2353862037261327,
+    "disclaimer": "Disclaimer: This is a generated legal redline suggestions draft and does not constitute formal legal advice. Please review with qualified counsel.",
+    "suggested_redline": "LIMITATION OF LIABILITY PLAYBOOK\nDOCUMENT ID: PRC_003\nTYPE: Negotiation Playbook\nCATEGORY: Limitation of Liability\n\nNEGO-RULES:\nRule 1: Always seek to exclude consequential, incidental, and indirect damages.\nRule 2: Cap total liability at 12 months fees paid.\nRule 3: Avoid unlimited liability caps unless required for data security or gross negligence.\n\nFALLBACK POSITIONS:\n- Fallback 1: Cap at 2x annual contract value.\n- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",
+    "explanation": "RAG Fallback suggestions: Proposing revision based on market precedent from PRC_003.txt (Limitation of Liability Negotiation Playbook) due to an LLM timeout or structured parsing exception."
+  }
+]
