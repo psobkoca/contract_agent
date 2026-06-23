@@ -53,7 +53,7 @@ class ClauseClassifier:
 
     def predict_nli_fallback(self, text: str) -> Tuple[str, float]:
         """Predicts the clause type and confidence using the zero-shot NLI fallback classifier."""
-        candidate_labels = [
+        candidate_labels = list(self.classes_) if self.classes_ else [
             "Liability", "Indemnification", "Payment", "Termination", "IP", 
             "Confidentiality", "Governing_Law", "Force_Majeure", "Dispute_Resolution", "Other"
         ]
@@ -128,9 +128,10 @@ class ClauseClassifier:
             for row in reader:
                 text = row.get("text", "").strip()
                 raw_label = row.get("label", "").strip()
-                if text and raw_label in self.LABEL_MAP:
+                if text and raw_label:
+                    clean_label = self.LABEL_MAP.get(raw_label, raw_label.replace(" ", "_"))
                     texts.append(text)
-                    labels.append(self.LABEL_MAP[raw_label])
+                    labels.append(clean_label)
 
         if not texts:
             raise ValueError(f"No valid training data found in {self.training_csv}")
