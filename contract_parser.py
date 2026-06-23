@@ -1,12 +1,50 @@
 import os
 import re
 import csv
+import json
+import sys
+import argparse
 from typing import List, Optional
 from loguru import logger
-from tabulate import tabulate
 
-# Import standard models
+# Import standard models and config
 from models import Clause
+from config import config
+
+class ParserError(Exception):
+    """Custom exception raised when contract parsing fails or file is empty/unreadable."""
+    pass
+
+# Section header regex patterns
+SECTION_NUM_PATTERN = re.compile(r'^(\d+(?:\.\d+)*)\.?\s+(.*)$')
+WORD_SECTION_PATTERN = re.compile(r'^(Section|SECTION|Clause|CLAUSE)\s+([A-Za-z0-9\.]+)\.?:?\s*(.*)$')
+ALL_CAPS_PATTERN = re.compile(r'^[A-Z0-9\s_,\-\(\)\&\:]{4,60}$')
+
+def is_section_header(text: str) -> bool:
+    """Checks if a given line of text matches a section header pattern."""
+    text = text.strip()
+    if not text:
+        return False
+        
+    # Ignore standard signature block lines, footers, etc.
+    if (re.search(r'Page \d+', text) or 
+        text.endswith('- CONFIDENTIAL') or 
+        'By: __' in text or 
+        text.startswith('Name:') or 
+        text.startswith('Title:') or 
+        text.startswith('By:') or
+        text.startswith('PARTY A:') or
+        text.startswith('PARTY B:')):
+        return False
+        
+    if SECTION_NUM_PATTERN.match(text):
+        return True
+    if WORD_SECTION_PATTERN.match(text):
+        return True
+    if ALL_CAPS_PATTERN.match(text) and len(text) > 5 and text not in ["PARTY A:", "PARTY B:"]:
+        return True
+        
+    return False
 
 def load_contract_metadata(contract_id: str) -> Optional[dict]:
     """Loads contract metadata from contract_metadata.csv for the given contract_id."""
@@ -37,8 +75,7 @@ def extract_lines_from_pdf(filepath: str) -> List[str]:
                 if text:
                     lines.extend(text.split("\n"))
     except Exception as e:
-        logger.error(f"Error reading PDF file {filepath}: {e}")
-        raise e
+        raise ParserError(f"PDF file is unreadable: {filepath}. Underlying error: {e}")
     return lines
 
 def extract_lines_from_docx(filepath: str) -> List[str]:
@@ -48,131 +85,183 @@ def extract_lines_from_docx(filepath: str) -> List[str]:
         doc = Document(filepath)
         return [p.text for p in doc.paragraphs if p.text.strip()]
     except Exception as e:
-        logger.error(f"Error reading DOCX file {filepath}: {e}")
-        raise e
+        raise ParserError(f"DOCX file is unreadable: {filepath}. Underlying error: {e}")
 
-def segment_text_into_clauses(lines: List[str], contract_id: str) -> List[Clause]:
-    """Segments contract lines/paragraphs into Clause objects using section-header rules."""
+def segment_text_two_pass(blocks: List[str], contract_id: str, is_docx: bool) -> List[Clause]:
+    """Segments contract text blocks into Clause objects using a two-pass approach."""
+    # Pass 1: Scan and identify all section headers and their indices
+    header_indices = []
+    for i, block in enumerate(blocks):
+        if is_section_header(block):
+            header_indices.append(i)
+            
     clauses = []
-    current_section = "Introduction"
-    buffer = []
     clause_index = 1
     
-    # Section header regex patterns
-    section_num_pattern = re.compile(r'^(\d+(?:\.\d+)*)\.?\s+(.*)$')
-    word_section_pattern = re.compile(r'^(Section|SECTION|Clause|CLAUSE)\s+([A-Za-z0-9\.]+)\.?:?\s*(.*)$')
-    all_caps_pattern = re.compile(r'^[A-Z0-9\s_,\-\(\)\&\:]{4,60}$')
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
+    # Pass 2: Extract content segments between headers and split by paragraph boundaries
+    # We define segment boundaries: [(section_title, start_index, end_index), ...]
+    segments = []
+    if not header_indices:
+        # No headers found; treat the whole document as Introduction
+        segments.append(("Introduction", 0, len(blocks)))
+    else:
+        # Text before the first header goes to "Introduction"
+        if header_indices[0] > 0:
+            segments.append(("Introduction", 0, header_indices[0]))
             
-        # Ignore page numbers, headers/footers, and standard signature block lines
-        if (re.search(r'Page \d+', line) or 
-            line.endswith('- CONFIDENTIAL') or 
-            'By: __' in line or 
-            line.startswith('Name:') or 
-            line.startswith('Title:') or 
-            line.startswith('By:') or
-            line.startswith('PARTY A:') or
-            line.startswith('PARTY B:')):
-            continue
+        for idx, start in enumerate(header_indices):
+            title = blocks[start].strip()
+            end = header_indices[idx + 1] if idx + 1 < len(header_indices) else len(blocks)
+            # Content of this segment starts after the header block itself
+            segments.append((title, start + 1, end))
             
-        is_header = False
+    # Process each segment
+    for title, start, end in segments:
+        segment_blocks = blocks[start:end]
         
-        m_num = section_num_pattern.match(line)
-        m_word = word_section_pattern.match(line)
-        
-        if m_num:
-            is_header = True
-        elif m_word:
-            is_header = True
-        elif all_caps_pattern.match(line) and len(line) > 5 and line not in ["PARTY A:", "PARTY B:"]:
-            is_header = True
-            
-        if is_header:
-            # If buffer contains accumulated body text, save it as a clause before starting a new section
-            if buffer:
-                text = " ".join(buffer).strip()
-                if text:
-                    clauses.append(Clause(
-                        clause_id=f"{contract_id}_CLS_{clause_index:03d}",
-                        section_number=current_section,
-                        text=text
-                    ))
-                    clause_index += 1
-                buffer = []
-            current_section = line
+        # Split segment into paragraphs
+        paragraphs = []
+        if is_docx:
+            # DOCX blocks are already paragraphs
+            paragraphs = [b.strip() for b in segment_blocks if b.strip()]
         else:
-            buffer.append(line)
-            
-    # Save the remaining clause in buffer
-    if buffer:
-        text = " ".join(buffer).strip()
-        if text:
-            clauses.append(Clause(
-                clause_id=f"{contract_id}_CLS_{clause_index:03d}",
-                section_number=current_section,
-                text=text
-            ))
-            
+            # PDF lines need joining into paragraphs
+            current_para = []
+            for b in segment_blocks:
+                b = b.strip()
+                if not b:
+                    if current_para:
+                        paragraphs.append(" ".join(current_para))
+                        current_para = []
+                else:
+                    current_para.append(b)
+            if current_para:
+                paragraphs.append(" ".join(current_para))
+                
+        # Create Clause objects for paragraphs matching minimum length
+        for para in paragraphs:
+            # Skip signature blocks, page counts, or lines that got grouped incorrectly
+            if (para.endswith('- CONFIDENTIAL') or 
+                'By: __' in para or 
+                para.startswith('Name:') or 
+                para.startswith('Title:') or
+                para.startswith('PARTY A:') or 
+                para.startswith('PARTY B:')):
+                continue
+                
+            if len(para) >= config.parsing.min_clause_chars:
+                clauses.append(Clause(
+                    clause_id=f"{contract_id}_CLS_{clause_index:03d}",
+                    section_number=title,
+                    raw_text=para
+                ))
+                clause_index += 1
+                
     return clauses
 
 def parse_contract(filepath: str) -> List[Clause]:
     """Detects format, extracts text, enriches with metadata, and segments into Clause objects."""
     if not os.path.exists(filepath):
-        logger.error(f"File not found: {filepath}")
-        return []
+        raise ParserError(f"Contract file not found at: {filepath}")
         
     filename = os.path.basename(filepath)
     contract_id, ext = os.path.splitext(filename)
     ext = ext.lower()
     
-    # 1. Enrich with metadata lookup
-    logger.info(f"Enriching metadata lookup for contract: {contract_id}")
-    metadata = load_contract_metadata(contract_id)
-    if metadata:
-        logger.success(f"Matched Metadata: Type={metadata['contract_type']}, Counterparty={metadata['counterparty_name']}, Law={metadata['governing_law']}, Value=${metadata['contract_value_usd']}, Priority={metadata['review_priority']}")
-    else:
-        logger.warning(f"No metadata found in contract_metadata.csv for ID: {contract_id}")
-        
-    # 2. Extract lines based on format detection
+    # 1. Format Detection & Extraction
     logger.info(f"Extracting text from {filename}...")
+    is_docx = False
     if ext == ".pdf":
-        lines = extract_lines_from_pdf(filepath)
+        blocks = extract_lines_from_pdf(filepath)
     elif ext == ".docx":
-        lines = extract_lines_from_docx(filepath)
+        is_docx = True
+        blocks = extract_lines_from_docx(filepath)
     else:
-        logger.error(f"Unsupported file format: {ext}")
-        return []
+        raise ParserError(f"Unsupported file format: {ext}")
         
-    # 3. Segment into Clause objects
-    logger.info("Segmenting text into clauses...")
-    clauses = segment_text_into_clauses(lines, contract_id)
-    logger.success(f"Successfully segmented {len(clauses)} clauses from {filename}")
+    # Abort if the file is empty after extraction
+    clean_blocks = [b.strip() for b in blocks if b.strip()]
+    if not clean_blocks:
+        raise ParserError(f"Contract file is empty or unreadable after text extraction: {filepath}")
+        
+    # 2. Two-Pass Segmentation
+    logger.info("Segmenting text into clauses using two-pass parser...")
+    clauses = segment_text_two_pass(blocks, contract_id, is_docx)
     
+    # 3. Enrichment with metadata
+    logger.info(f"Enriching clauses with metadata registry for contract: {contract_id}")
+    metadata = load_contract_metadata(contract_id)
+    
+    if metadata:
+        logger.success(f"Matched Metadata: Type={metadata.get('contract_type')}, Counterparty={metadata.get('counterparty_name')}")
+        # Map values to each Clause
+        for clause in clauses:
+            clause.counterparty_name = metadata.get("counterparty_name")
+            clause.contract_type = metadata.get("contract_type")
+            clause.governing_law_jurisdiction = metadata.get("governing_law")
+            clause.effective_date = metadata.get("effective_date")
+            try:
+                clause.contract_value_usd = float(metadata.get("contract_value_usd", 0.0))
+            except ValueError:
+                clause.contract_value_usd = 0.0
+    else:
+        logger.warning(f"Log Warning: contract_id '{contract_id}' not found in metadata registry. Continuing with null metadata.")
+        
     return clauses
 
 def main():
-    import sys
-    # If a file is passed in CLI arguments, parse it
-    if len(sys.argv) > 1:
-        filepath = sys.argv[1]
-        clauses = parse_contract(filepath)
+    parser = argparse.ArgumentParser(description="Contract Clause Parser and Metadata Enricher")
+    parser.add_argument("--contract", required=True, help="Path to the PDF/DOCX contract file.")
+    parser.add_argument("--output", help="Optional path to output the results as a JSON file.")
+    
+    args = parser.parse_args()
+    
+    try:
+        clauses = parse_contract(args.contract)
         
-        # Display the parsed clauses in a table
-        table_data = []
-        for c in clauses:
-            # Truncate text for cleaner display in table
-            truncated_text = c.raw_text[:80] + "..." if len(c.raw_text) > 80 else c.raw_text
-            table_data.append([c.clause_id, c.section_number, truncated_text])
+        if not clauses:
+            logger.warning("No clauses extracted from the contract.")
+            sys.exit(0)
             
-        print("\n--- Extracted Clauses Table ---")
-        print(tabulate(table_data, headers=["Clause ID", "Section Header / Number", "Clause Text (Truncated)"], tablefmt="grid"))
-    else:
-        print("Usage: python contract_parser.py <path_to_contract_file>")
-        print("Example: python contract_parser.py contracts/CTR_001.pdf")
+        # Calculate contract-level statistics (FR-04)
+        total_clause_count = len(clauses)
+        word_count = sum(len(c.raw_text.split()) for c in clauses)
+        unique_section_count = len(set(c.section_number for c in clauses))
+        contract_type = clauses[0].contract_type or "Unknown"
+        
+        # Log stats using loguru
+        logger.success("--- Contract-Level Statistics ---")
+        logger.info(f"Contract Type: {contract_type}")
+        logger.info(f"Total Clause Count: {total_clause_count}")
+        logger.info(f"Word Count: {word_count}")
+        logger.info(f"Unique Section Count: {unique_section_count}")
+        
+        contract_summary = {
+            "total_clause_count": total_clause_count,
+            "word_count": word_count,
+            "unique_section_count": unique_section_count,
+            "contract_type": contract_type
+        }
+        
+        # Write to JSON output if requested
+        if args.output:
+            output_data = {
+                "contract_summary": contract_summary,
+                "clauses": [c.model_dump() for c in clauses]
+            }
+            try:
+                with open(args.output, mode="w", encoding="utf-8") as f:
+                    json.dump(output_data, f, indent=2)
+                logger.success(f"Successfully saved run output to {args.output}")
+            except Exception as e:
+                logger.error(f"Failed to write output file: {e}")
+                
+    except ParserError as pe:
+        logger.critical(f"Parser Aborted: {pe}")
+        sys.exit(1)
+    except Exception as e:
+        logger.critical(f"Unexpected error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

@@ -11,7 +11,7 @@ class Clause(BaseModel):
         None,
         description="The section number or header of the clause, e.g., '1. Purpose' or 'Section 3.1'."
     )
-    text: str = Field(
+    raw_text: str = Field(
         ..., 
         description="The raw textual content of the clause."
     )
@@ -19,10 +19,28 @@ class Clause(BaseModel):
         None, 
         description="The page number where the clause was located in the source document."
     )
-
-    @property
-    def raw_text(self) -> str:
-        return self.text
+    
+    # Enriched metadata fields
+    counterparty_name: Optional[str] = Field(
+        None,
+        description="The name of the counterparty (fictional in samples)."
+    )
+    contract_type: Optional[str] = Field(
+        None,
+        description="The type of the contract, e.g., NDA, MSA, SaaS."
+    )
+    governing_law_jurisdiction: Optional[str] = Field(
+        None,
+        description="The jurisdiction of governing law."
+    )
+    effective_date: Optional[str] = Field(
+        None,
+        description="The contract effective date (ISO 8601 format)."
+    )
+    contract_value_usd: Optional[float] = Field(
+        None,
+        description="The total contract value in USD."
+    )
 
 class ClassifiedClause(BaseModel):
     """Represents a clause that has been classified into a specific legal category."""
