@@ -41,6 +41,10 @@ class Clause(BaseModel):
         None,
         description="The total contract value in USD."
     )
+    our_role: Optional[str] = Field(
+        None,
+        description="Our role in the contract (e.g. CLIENT, BUYER, LICENSOR, SERVICE_PROVIDER)."
+    )
     
     # Classification fields
     clause_type: Optional[str] = Field(

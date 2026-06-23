@@ -137,6 +137,12 @@ def run_pipeline(
             else:
                 tier = "LOW"
                 
+            # Override tier to HIGH if LLM review is required for this clause type regardless of confidence
+            c_type = clause.clause_type
+            if c_type in scorer.clause_type_weights and scorer.clause_type_weights[c_type]["review_required"]:
+                if tier not in ["CRITICAL", "HIGH"]:
+                    tier = "HIGH"
+                
             scored_clauses_tier.append({
                 "clause": clause,
                 "score": score,

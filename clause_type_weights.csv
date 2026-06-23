@@ -1,0 +1,11 @@
+clause_type,type_weight,review_required,our_role_bias
+Confidentiality,0.5,False,CLIENT
+Governing_Law,0.4,False,CLIENT
+Termination,0.7,False,CLIENT
+Indemnification,1.0,True,BUYER
+Liability,1.0,True,BUYER
+IP,0.8,True,BUYER
+Payment,0.6,False,BUYER
+Force_Majeure,0.3,False,BUYER
+Dispute_Resolution,0.4,False,BUYER
+Other,0.2,False,BUYER

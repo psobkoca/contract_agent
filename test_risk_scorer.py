@@ -93,3 +93,29 @@ def test_clause_score_calculation():
     assert res["jurisdiction_risk_score"] == 0.1
     assert res["value_risk_score"] == 0.2
     assert pytest.approx(res["final_score"], abs=1e-5) == 0.31
+
+def test_role_biased_one_sidedness(scorer):
+    # If our role matches the bias (disadvantaged), one-sided keyword should yield 1.0
+    assert scorer.calculate_one_sidedness_score(
+        "This shall be solely determined by the company.",
+        clause_type="Liability",
+        our_role="BUYER"
+    ) == 1.0
+
+    # If our role is different from the bias, it advantages us, yielding 0.2
+    assert scorer.calculate_one_sidedness_score(
+        "This shall be solely determined by the company.",
+        clause_type="Liability",
+        our_role="LICENSOR"
+    ) == 0.2
+
+def test_clause_type_weight_loading(scorer):
+    assert "Liability" in scorer.clause_type_weights
+    assert scorer.clause_type_weights["Liability"]["type_weight"] == 1.0
+    assert scorer.clause_type_weights["Liability"]["review_required"] is True
+    assert scorer.clause_type_weights["Liability"]["our_role_bias"] == "BUYER"
+    
+    assert "Confidentiality" in scorer.clause_type_weights
+    assert scorer.clause_type_weights["Confidentiality"]["type_weight"] == 0.5
+    assert scorer.clause_type_weights["Confidentiality"]["review_required"] is False
+    assert scorer.clause_type_weights["Confidentiality"]["our_role_bias"] == "CLIENT"

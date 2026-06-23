@@ -1,14 +1,14 @@
-jurisdiction,risk_score
-Delaware,0.1
-New York,0.1
-Nevada,0.2
-Massachusetts,0.2
-California,0.3
-Texas,0.3
-Washington,0.3
-Illinois,0.4
-Ohio,0.4
-Oregon,0.4
-Federal,0.2
-European Union,0.3
-Other,0.7
+jurisdiction,jurisdiction_risk,legal_system,enforceability_score,key_risk_notes
+Delaware,0.1,Common Law,0.95,Highly predictable corporate case law and courts
+New York,0.1,Common Law,0.95,Standard commercial contracts hub
+Nevada,0.2,Common Law,0.90,Favorable management liability laws
+Massachusetts,0.2,Common Law,0.90,Strong employee and consumer protection bias
+California,0.3,Common Law,0.85,Void non-competes; high liability risk
+Texas,0.3,Common Law,0.88,Business friendly with minor local litigation variations
+Washington,0.3,Common Law,0.85,Tech friendly; standard contract laws
+Illinois,0.4,Common Law,0.80,Strict biometric and consumer privacy laws
+Ohio,0.4,Common Law,0.82,Standard Midwestern commercial rules
+Oregon,0.4,Common Law,0.80,Increasingly strict state statutory provisions
+Federal,0.2,Common Law,0.92,Requires federal question or diversity jurisdiction
+European Union,0.3,Civil Law,0.85,GDPR compliance mandatory; civil system
+Other,0.7,Mixed,0.60,Default risk assessment for unspecified jurisdictions

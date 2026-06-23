@@ -18,7 +18,8 @@ class RiskScorer:
         self,
         weights: Optional[Dict[str, float]] = None,
         rag_engine: Optional[RAGEngine] = None,
-        jurisdiction_risk_path: str = "jurisdiction_risk.csv"
+        jurisdiction_risk_path: str = "jurisdiction_risk.csv",
+        clause_type_weights_path: str = "clause_type_weights.csv"
     ):
         # Configurable weights (defaulting to balanced 4-factor allocation)
         self.weights = weights or config.risk_scoring.weights or {
@@ -41,6 +42,10 @@ class RiskScorer:
         self.jurisdiction_risk = {}
         self._load_jurisdiction_risk(jurisdiction_risk_path)
 
+        # Load clause type weights map
+        self.clause_type_weights = {}
+        self._load_clause_type_weights(clause_type_weights_path)
+
     def _load_jurisdiction_risk(self, path: str) -> None:
         if not os.path.exists(path):
             logger.warning(f"Jurisdiction risk file not found at {path}. Using fallback default risk scores.")
@@ -53,13 +58,52 @@ class RiskScorer:
                 for row in reader:
                     jur = row["jurisdiction"].strip().lower()
                     try:
-                        self.jurisdiction_risk[jur] = float(row["risk_score"])
+                        self.jurisdiction_risk[jur] = float(row["jurisdiction_risk"])
                     except ValueError:
                         pass
             logger.info(f"Loaded {len(self.jurisdiction_risk)} jurisdictions from {path}")
         except Exception as e:
             logger.error(f"Error loading jurisdiction risk: {e}")
             self.jurisdiction_risk = {"other": 0.7}
+
+    def _load_clause_type_weights(self, path: str) -> None:
+        if not os.path.exists(path):
+            logger.warning(f"Clause type weights file not found at {path}. Using default weights.")
+            # Default weights if file does not exist
+            self.clause_type_weights = {
+                "Liability": {"type_weight": 1.0, "review_required": True, "our_role_bias": "BUYER"},
+                "Indemnification": {"type_weight": 1.0, "review_required": True, "our_role_bias": "BUYER"},
+                "IP": {"type_weight": 0.8, "review_required": True, "our_role_bias": "BUYER"},
+                "Confidentiality": {"type_weight": 0.5, "review_required": False, "our_role_bias": "CLIENT"},
+                "Payment": {"type_weight": 0.6, "review_required": False, "our_role_bias": "BUYER"},
+                "Termination": {"type_weight": 0.7, "review_required": False, "our_role_bias": "CLIENT"},
+                "Governing_Law": {"type_weight": 0.4, "review_required": False, "our_role_bias": "CLIENT"},
+                "Force_Majeure": {"type_weight": 0.3, "review_required": False, "our_role_bias": "BUYER"},
+                "Dispute_Resolution": {"type_weight": 0.4, "review_required": False, "our_role_bias": "BUYER"},
+                "Other": {"type_weight": 0.2, "review_required": False, "our_role_bias": "BUYER"}
+            }
+            return
+            
+        try:
+            with open(path, mode="r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    c_type = row.get("clause_type", "").strip()
+                    if c_type:
+                        try:
+                            tw = float(row.get("type_weight", 0.0))
+                        except ValueError:
+                            tw = 0.0
+                        rr = row.get("review_required", "false").lower() == "true"
+                        orb = row.get("our_role_bias", "").strip()
+                        self.clause_type_weights[c_type] = {
+                            "type_weight": tw,
+                            "review_required": rr,
+                            "our_role_bias": orb
+                        }
+            logger.info(f"Loaded {len(self.clause_type_weights)} clause type weights from {path}")
+        except Exception as e:
+            logger.error(f"Error loading clause type weights: {e}")
 
     def lookup_jurisdiction_risk(self, jurisdiction: Optional[str]) -> float:
         """Looks up the risk score for a jurisdiction, defaulting to 'Other' (0.7)."""
@@ -77,8 +121,13 @@ class RiskScorer:
                 
         return self.jurisdiction_risk.get("other", 0.7)
 
-    def calculate_one_sidedness_score(self, text: str) -> float:
-        """Detects one-sided keywords in text, returning 1.0 if any are present, 0.0 otherwise."""
+    def calculate_one_sidedness_score(
+        self,
+        text: str,
+        clause_type: Optional[str] = None,
+        our_role: Optional[str] = None
+    ) -> float:
+        """Detects one-sided keywords in text, adjusted by our_role and our_role_bias if available."""
         text_lower = text.lower()
         keywords = [
             "solely",
@@ -90,10 +139,25 @@ class RiskScorer:
             "sole discretion",
             "unilateral"
         ]
-        for kw in keywords:
-            if kw in text_lower:
-                return 1.0
-        return 0.0
+        
+        has_keyword = any(kw in text_lower for kw in keywords)
+        if not has_keyword:
+            return 0.0
+            
+        # If we have one-sided keyword, check if it disadvantages our role
+        if clause_type and our_role:
+            weights_info = self.clause_type_weights.get(clause_type)
+            if weights_info:
+                bias = weights_info.get("our_role_bias")
+                if bias:
+                    role_norm = our_role.strip().upper()
+                    bias_norm = bias.strip().upper()
+                    if role_norm == bias_norm:
+                        return 1.0  # Disadvantages us -> high risk
+                    else:
+                        return 0.2  # Disadvantages them -> low risk for us
+                        
+        return 1.0  # Default if no role/bias context
 
     def calculate_market_deviation_score(self, clause_text: str, precedent_passages: List[dict]) -> float:
         """Computes the average cosine distance from the clause to the top precedent passages."""
@@ -137,19 +201,27 @@ class RiskScorer:
 
     def score_clause(self, clause: Clause, precedent_passages: List[dict]) -> Dict[str, Any]:
         """Calculates the weighted 4-factor risk score for a single clause."""
-        f1 = self.calculate_one_sidedness_score(clause.raw_text)
+        f1 = self.calculate_one_sidedness_score(
+            clause.raw_text,
+            clause_type=clause.clause_type,
+            our_role=clause.our_role
+        )
         f2 = self.calculate_market_deviation_score(clause.raw_text, precedent_passages)
         f3 = self.lookup_jurisdiction_risk(clause.governing_law_jurisdiction)
         
-        # Determine if we use 'type' (from classifier risk flags) or 'value' (from contract USD value)
+        # Determine if we use 'type' (from clause_type_weights.csv) or 'value' (from contract USD value)
         f_type_or_value = 0.0
         weight_key = "value"
         if "type" in self.weights:
             weight_key = "type"
-            if clause.risk_flag == "HIGH_RISK":
-                f_type_or_value = 1.0
-            elif clause.risk_flag == "REVIEW_REQUIRED":
-                f_type_or_value = 0.5
+            c_type = clause.clause_type
+            if c_type in self.clause_type_weights:
+                f_type_or_value = self.clause_type_weights[c_type]["type_weight"]
+            else:
+                if clause.risk_flag == "HIGH_RISK":
+                    f_type_or_value = 1.0
+                elif clause.risk_flag == "REVIEW_REQUIRED":
+                    f_type_or_value = 0.5
         else:
             f_type_or_value = self.calculate_value_risk_score(clause.contract_value_usd)
             

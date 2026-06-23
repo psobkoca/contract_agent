@@ -200,6 +200,7 @@ def parse_contract(filepath: str, classify: bool = True) -> List[Clause]:
             clause.contract_type = metadata.get("contract_type")
             clause.governing_law_jurisdiction = metadata.get("governing_law")
             clause.effective_date = metadata.get("effective_date")
+            clause.our_role = metadata.get("our_role")
             try:
                 clause.contract_value_usd = float(metadata.get("contract_value_usd", 0.0))
             except ValueError:
