@@ -110,6 +110,8 @@ class ClauseClassifier:
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.linear_model import LogisticRegression
         from sklearn.pipeline import Pipeline
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import classification_report, accuracy_score
 
         logger.info(f"Loading training data from {self.training_csv}...")
         texts, labels = [], []
@@ -125,7 +127,32 @@ class ClauseClassifier:
         if not texts:
             raise ValueError(f"No valid training data found in {self.training_csv}")
 
-        logger.info(f"Training Logistic Regression pipeline on {len(texts)} samples...")
+        # Compute validation metrics on a train/test split (FR-08)
+        X_train, X_test, y_train, y_test = train_test_split(
+            texts, labels, test_size=0.2, random_state=42, stratify=labels
+        )
+        
+        val_pipeline = Pipeline([
+            ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
+            ('clf', LogisticRegression(max_iter=1000, C=1.0))
+        ])
+        val_pipeline.fit(X_train, y_train)
+        y_pred = val_pipeline.predict(X_test)
+        
+        accuracy = accuracy_score(y_test, y_pred)
+        report = classification_report(y_test, y_pred, output_dict=True)
+        
+        logger.info("--- Model Validation Metrics (Train/Test Split) ---")
+        logger.info(f"Overall Accuracy: {accuracy:.4f}")
+        for cls_name, metrics in report.items():
+            if isinstance(metrics, dict):
+                logger.info(
+                    f"Class '{cls_name}': Precision={metrics['precision']:.4f}, "
+                    f"Recall={metrics['recall']:.4f}, F1-Score={metrics['f1-score']:.4f}"
+                )
+
+        # Train final model on 100% of the data
+        logger.info(f"Fitting final Logistic Regression model on all {len(texts)} samples...")
         self.pipeline = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
             ('clf', LogisticRegression(max_iter=1000, C=1.0))
@@ -191,8 +218,16 @@ class ClauseClassifier:
                 self.train_and_persist()
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Clause Classifier Trainer and CLI")
+    parser.add_argument("--retrain", action="store_true", help="Force retraining the classifier from scratch.")
+    args = parser.parse_args()
+
+    # Configure loguru to write to agent.log
+    logger.add("agent.log", rotation="10 MB", level="INFO")
+    
     classifier = ClauseClassifier()
-    classifier.init_classifier()
+    classifier.init_classifier(force_retrain=args.retrain)
 
 if __name__ == "__main__":
     main()
