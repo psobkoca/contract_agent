@@ -200,6 +200,13 @@ def run_pipeline(
         try:
             res = agent.review_clause(clause)
             
+            # Fetch precedent citations
+            precedents = clause_precedents.get(clause.clause_id, [])
+            precedent_citations = [
+                f"{p['metadata'].get('source_file', 'Unknown')} - {p['metadata'].get('title', 'Unknown')}"
+                for p in precedents
+            ]
+            
             redline_entry = {
                 "clause_id": clause.clause_id,
                 "section_number": clause.section_number,
@@ -216,7 +223,8 @@ def run_pipeline(
                 "legal_disclaimer": res.legal_disclaimer,
                 "fallback_mode": res.fallback_mode,
                 "loop_count": res.loop_count,
-                "latency_ms": res.latency_ms
+                "latency_ms": res.latency_ms,
+                "precedent_citations": precedent_citations
             }
             all_reviewed_clauses.append(redline_entry)
             if contract_id in contract_redlines:
@@ -284,7 +292,7 @@ def run_pipeline(
     # Step 10: Write JSON log, Markdown memo (disclaimer top+bottom), redlines.csv; print CLI summary with CRITICAL RISK ALERT if applicable.
     logger.info("Step 10: Writing JSON log, Markdown memo, redlines.csv, and displaying CLI summary...")
     reporter.generate_json_log(json_log_payload)
-    reporter.generate_markdown_memo(all_reviewed_clauses)
+    reporter.generate_markdown_memo(contract_review_logs, scored_contracts_clauses, scorecard_data)
     reporter.generate_csv_redlines(all_reviewed_clauses)
     reporter.display_cli_summary(all_reviewed_clauses, scorecard_data)
     

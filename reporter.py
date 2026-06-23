@@ -74,56 +74,131 @@ class Reporter:
             logger.error(f"Failed to generate JSON review log: {e}")
         return path
 
-    def generate_markdown_memo(self, run_data: List[Dict[str, Any]]) -> str:
-        """Generates a Markdown review memo, including double disclaimer and CRITICAL RISK ALERT if needed."""
-        filename = f"contract_review_memo_{self.run_id}.md"
+    def generate_markdown_memo(
+        self,
+        contract_review_logs: List[Dict[str, Any]],
+        scored_contracts_clauses: Dict[str, Any],
+        scorecard_data: List[Dict[str, Any]]
+    ) -> str:
+        """Generates a Markdown review memo matching the exact FR-23 format requirements."""
+        filename = f"{self.run_id}.md"
         path = os.path.join(self.output_dir, filename)
         
-        # Check if there are any critical risk clauses
-        has_critical = any(c.get("risk_tier") == "CRITICAL" for c in run_data)
+        # Check if there are any critical risk clauses in any contract
+        has_critical = any(
+            any(r.get("risk_tier") == "CRITICAL" for r in log.get("redlines", []))
+            for log in contract_review_logs
+        )
         
         try:
             with open(path, mode="w", encoding="utf-8") as f:
-                # Top Disclaimer
-                f.write(f"> [!IMPORTANT]\n> **LEGAL DISCLAIMER**:\n> {prompts.DISCLAIMER_TEXT}\n\n")
+                # Top Disclaimer (visibly distinct callout box)
+                f.write(f"> [!IMPORTANT]\n> **MANDATORY LEGAL DISCLAIMER**:\n> {prompts.DISCLAIMER_TEXT}\n\n")
                 
-                # Critical Risk Alert Header
                 if has_critical:
                     f.write("# ⚠️ CRITICAL RISK ALERT\n")
                     f.write("> **WARNING**: This contract contains one or more **CRITICAL-tier** risk clauses. "
                             "These provisions present severe legal exposure and MUST be negotiated and approved "
                             "before execution. Details are provided below.\n\n")
-                    
-                f.write("# Contract Review & Negotiation Memo\n")
-                f.write("This document summarizes the contract clause revisions suggested by the AI agent.\n\n")
+                            
+                f.write("# Contract Review & Negotiation Memo\n\n")
                 
-                f.write("## Reviewed Clauses Summary\n")
-                
-                for idx, c in enumerate(run_data):
-                    tier = c.get("risk_tier", "HIGH")
-                    tier_str = f"**{tier} RISK**" if tier == "HIGH" else f"🚨 **{tier} RISK**"
+                for log in contract_review_logs:
+                    cid = log["contract_id"]
+                    cp = log["counterparty_name"]
                     
-                    f.write(f"### {idx+1}. Clause ID: {c['clause_id']} (Section: {c['section_number']})\n")
-                    f.write(f"- **Clause Type**: {c['clause_type']}\n")
-                    f.write(f"- **Risk Level**: {tier_str} (Score: {c['risk_score']:.4f})\n")
-                    f.write(f"- **Negotiation Priority**: `{c['negotiation_priority']}`\n")
-                    if c.get("fallback_mode") is True:
-                        f.write("- **Mode**: `FALLBACK_MODE` ⚠️\n")
+                    # Find contract-level stats from scorecard_data
+                    sc_info = next((s for s in scorecard_data if s["contract_id"] == cid), None)
+                    overall_tier = sc_info["risk_tier"] if sc_info else "Unknown"
+                    overall_score = sc_info["risk_score"] if sc_info else 0.0
+                    c_type = sc_info["contract_type"] if sc_info else "Unknown"
+                    gov_law = sc_info["governing_law"] if sc_info else "Unknown"
+                    val_usd = sc_info["contract_value_usd"] if sc_info else 0.0
+                    
+                    # Get badge color
+                    badge_colors = {
+                        "CRITICAL": "red",
+                        "HIGH": "orange",
+                        "MEDIUM": "yellow",
+                        "LOW_RISK": "green",
+                        "LOW": "green"
+                    }
+                    b_color = badge_colors.get(overall_tier, "blue")
+                    badge_url = f"https://img.shields.io/badge/Overall_Risk_Tier-{overall_tier}-{b_color}?style=for-the-badge"
+                    
+                    f.write(f"## Contract: {cid} ({cp})\n\n")
+                    f.write(f"### Executive Risk Summary\n")
+                    f.write(f"![Overall Risk Tier Badge]({badge_url})\n\n")
+                    f.write(f"The overall risk score for this contract is **{overall_score:.4f}**, classifying it into the **{overall_tier}** tier.\n\n")
+                    
+                    # Contract Statistics Table
+                    scored_items = scored_contracts_clauses.get(cid, [])
+                    effective_date = "Unknown"
+                    if scored_items:
+                        effective_date = scored_items[0]["clause"].effective_date or "Unknown"
+                        
+                    f.write("### Contract Statistics\n\n")
+                    f.write("| Metric | Value |\n")
+                    f.write("| :--- | :--- |\n")
+                    f.write(f"| **Contract ID** | {cid} |\n")
+                    f.write(f"| **Counterparty** | {cp} |\n")
+                    f.write(f"| **Contract Type** | {c_type} |\n")
+                    f.write(f"| **Governing Law** | {gov_law} |\n")
+                    f.write(f"| **Effective Date** | {effective_date} |\n")
+                    f.write(f"| **Contract Value (USD)** | ${val_usd:,.2f} |\n")
+                    f.write(f"| **Total Clauses** | {log['total_clauses']} |\n")
+                    f.write(f"| **Clauses Reviewed by LLM** | {log['clauses_reviewed_by_llm']} |\n\n")
+                    
+                    # Risk Scorecard Summary (Top-10 clauses by score)
+                    f.write("### Risk Scorecard (Top-10 Clauses)\n\n")
+                    f.write("| Rank | Clause ID | Section/Header | Clause Type | Risk Score | Risk Tier |\n")
+                    f.write("| :---: | :--- | :--- | :--- | :---: | :---: |\n")
+                    
+                    sorted_items = sorted(scored_items, key=lambda x: x["score"], reverse=True)[:10]
+                    for rank, item in enumerate(sorted_items):
+                        cl = item["clause"]
+                        f.write(f"| {rank+1} | {cl.clause_id} | {cl.section_number or 'N/A'} | {cl.clause_type} | {item['score']:.4f} | {item['tier']} |\n")
                     f.write("\n")
                     
-                    f.write("#### Original Text:\n")
-                    f.write(f"```text\n{c['raw_text']}\n```\n\n")
-                    
-                    f.write("#### Suggested Redline:\n")
-                    f.write(f"```text\n{c['redlined_clause']}\n```\n\n")
-                    
-                    f.write("#### Rationale & Walk-Away Trigger:\n")
-                    f.write(f"**Rationale**: {c['redline_rationale']}\n\n")
-                    f.write(f"**Walk-away Trigger**: {c['walk_away_trigger']}\n\n")
-                    f.write("---\n\n")
-                    
-                # Bottom Disclaimer
-                f.write(f"\n> [!IMPORTANT]\n> **LEGAL DISCLAIMER**:\n> {prompts.DISCLAIMER_TEXT}\n")
+                    # Per-Clause Negotiation Section
+                    f.write("### Per-Clause Negotiation Details\n\n")
+                    redlines = log.get("redlines", [])
+                    if not redlines:
+                        f.write("*No HIGH or CRITICAL risk clauses were reviewed for this contract.*\n\n")
+                    else:
+                        for idx, r in enumerate(redlines):
+                            tier_str = f"**{r['risk_tier']} RISK**"
+                            f.write(f"#### {idx+1}. Clause {r['clause_id']} (Section: {r['section_number']})\n")
+                            f.write(f"- **Clause Type**: {r['clause_type']}\n")
+                            f.write(f"- **Risk Level**: {tier_str} (Score: {r['risk_score']:.4f})\n")
+                            f.write(f"- **Negotiation Priority**: `{r['negotiation_priority']}`\n")
+                            if r.get("fallback_mode"):
+                                f.write("- **Mode**: `FALLBACK_MODE` ⚠️\n")
+                            f.write("\n")
+                            
+                            f.write("##### Original Clause Excerpt:\n")
+                            f.write(f"```text\n{r['raw_text']}\n```\n\n")
+                            
+                            f.write("##### Redlined Clause:\n")
+                            f.write(f"```text\n{r['redlined_clause']}\n```\n\n")
+                            
+                            f.write("##### Rationale:\n")
+                            f.write(f"{r['redline_rationale']}\n\n")
+                            
+                            f.write("##### Walk-away Trigger:\n")
+                            f.write(f"{r['walk_away_trigger']}\n\n")
+                            
+                            f.write("##### Precedent Citations:\n")
+                            citations = r.get("precedent_citations", [])
+                            if citations:
+                                for cit in citations:
+                                    f.write(f"- {cit}\n")
+                            else:
+                                f.write("- No precedents cited.\n")
+                            f.write("\n---\n\n")
+                            
+                # Bottom Disclaimer (visibly distinct callout box)
+                f.write(f"> [!IMPORTANT]\n> **MANDATORY LEGAL DISCLAIMER**:\n> {prompts.DISCLAIMER_TEXT}\n")
                 
             logger.success(f"Markdown review memo exported to {path}")
         except Exception as e:
