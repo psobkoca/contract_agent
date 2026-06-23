@@ -1,0 +1,14 @@
+jurisdiction,risk_score
+Delaware,0.1
+New York,0.1
+Nevada,0.2
+Massachusetts,0.2
+California,0.3
+Texas,0.3
+Washington,0.3
+Illinois,0.4
+Ohio,0.4
+Oregon,0.4
+Federal,0.2
+European Union,0.3
+Other,0.7

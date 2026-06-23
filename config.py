@@ -21,10 +21,26 @@ class ClassifierConfig(BaseModel):
         description="Clause types flagged as high risk if confidence is high."
     )
 
+class RAGConfig(BaseModel):
+    """Configuration settings for the Legal RAG Retrieval Engine."""
+    chunk_size: int = Field(
+        512,
+        description="Text splitter token chunk size."
+    )
+    chunk_overlap: int = Field(
+        64,
+        description="Text splitter token chunk overlap."
+    )
+    top_k: int = Field(
+        6,
+        description="Number of candidate passages to retrieve in hybrid search before reranking."
+    )
+
 class AppConfig(BaseSettings):
     """Application-wide settings loader."""
     parsing: ParsingConfig = ParsingConfig()
     classifier: ClassifierConfig = ClassifierConfig()
+    rag: RAGConfig = RAGConfig()
 
     model_config = SettingsConfigDict(
         env_nested_delimiter="__",
