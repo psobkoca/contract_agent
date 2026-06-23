@@ -293,6 +293,9 @@ def run_pipeline(
 
     # Step 10: Write JSON log, Markdown memo (disclaimer top+bottom), redlines.csv; print CLI summary with CRITICAL RISK ALERT if applicable.
     logger.info("Step 10: Writing JSON log, Markdown memo, redlines.csv, and displaying CLI summary...")
+    import json
+    logger.info(f"Observability JSON Context: {json.dumps(json_log_payload)}")
+    logger.info(f"Total clauses parsed across all contracts: {sum(len(c) for c in contracts_clauses.values())}. Total reviewed by LLM: {len(all_reviewed_clauses)}")
     reporter.generate_json_log(json_log_payload)
     reporter.generate_markdown_memo(contract_review_logs, scored_contracts_clauses, scorecard_data)
     reporter.generate_csv_redlines(all_reviewed_clauses)
