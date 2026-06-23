@@ -45,9 +45,21 @@ def test_token_guard():
     # Tiny prompt fits
     assert client.count_tokens("Hello") < 10
     
-    # Prompt exceeding limit should raise ValueError
-    with pytest.raises(ValueError, match="exceeds token guard limit"):
-        client.create_message(messages=[{"role": "user", "content": "This is a prompt that is definitely longer than ten tokens"}])
+    # Mock messages.create API call
+    mock_create = MagicMock(return_value=MockMessage(content=[MockTextBlock("Success")]))
+    client.client = MagicMock()
+    client.client.messages.create = mock_create
+    
+    # Pass a prompt that exceeds the 10 token limit
+    long_prompt = "This is a prompt that is definitely longer than ten tokens"
+    res = client.create_message(messages=[{"role": "user", "content": long_prompt}])
+    
+    # Check that it succeeded (didn't raise ValueError) and was truncated
+    assert res.content[0].text == "Success"
+    call_kwargs = mock_create.call_args[1]
+    sent_prompt = call_kwargs["messages"][0]["content"]
+    assert client.count_tokens(sent_prompt) <= 10
+    assert len(sent_prompt) < len(long_prompt)
 
 # 2. Test Retry Mechanism on Transient Errors
 @patch("anthropic.Anthropic")
@@ -537,6 +549,7 @@ def test_run_pipeline_end_to_end(mock_review_clause, mock_nli, mock_sklearn, tmp
 
 def test_rag_ac4():
     rag = RAGEngine()
+    rag.build_or_load_vector_store()
     passages = rag.hybrid_search("Limitation of Liability", rerank=True, top_n=3)
     assert len(passages) == 3
     for p in passages:
@@ -564,6 +577,7 @@ def test_agent_ac7():
         fallback_mode=False
     )
     assert res.fallback_mode is False
+    assert res.legal_disclaimer == prompts.DISCLAIMER_TEXT
 
 
 def test_agent_ac8():
