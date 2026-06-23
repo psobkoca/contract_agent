@@ -374,6 +374,7 @@ def test_clause_no_matching_precedent():
     
     assert res.redlined_clause == "Original raw text proposed."
     assert "No precedents found" in res.redline_rationale
+    assert res.legal_disclaimer == prompts.DISCLAIMER_TEXT
     
     # Now verify the user prompt sent to LLM contains "No precedents found."
     call_args = mock_client.create_message.call_args[1]
