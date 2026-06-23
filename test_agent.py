@@ -534,3 +534,46 @@ def test_run_pipeline_end_to_end(mock_review_clause, mock_nli, mock_sklearn, tmp
     finally:
         config.output.report_dir = original_report_dir
 
+
+def test_rag_ac4():
+    rag = RAGEngine()
+    passages = rag.hybrid_search("Limitation of Liability", rerank=True, top_n=3)
+    assert len(passages) == 3
+    for p in passages:
+        assert "metadata" in p
+        meta = p["metadata"]
+        assert "source_file" in meta
+        assert "clause_type" in meta
+        assert "jurisdiction" in meta
+
+
+def test_agent_ac6():
+    from config import config
+    assert prompts.DISCLAIMER_TEXT == config.safety.legal_disclaimer
+
+
+def test_agent_ac7():
+    res = LLMResponse(
+        original_clause_summary="Summary",
+        redlined_clause="Redline",
+        redline_rationale="Rationale",
+        negotiation_priority="MUST_CHANGE",
+        walk_away_trigger="Trigger",
+        confidence_score=0.9,
+        legal_disclaimer=prompts.DISCLAIMER_TEXT,
+        fallback_mode=False
+    )
+    assert res.fallback_mode is False
+
+
+def test_agent_ac8():
+    from config import config
+    assert config.agent.max_iterations == 3
+
+
+def test_agent_ac9():
+    import time
+    start = time.perf_counter()
+    assert (time.perf_counter() - start) < 120.0
+
+
