@@ -7,6 +7,10 @@ class Clause(BaseModel):
         None, 
         description="Unique identifier for the clause, e.g. CLS_001."
     )
+    section_number: Optional[str] = Field(
+        None,
+        description="The section number or header of the clause, e.g., '1. Purpose' or 'Section 3.1'."
+    )
     text: str = Field(
         ..., 
         description="The raw textual content of the clause."
@@ -15,6 +19,10 @@ class Clause(BaseModel):
         None, 
         description="The page number where the clause was located in the source document."
     )
+
+    @property
+    def raw_text(self) -> str:
+        return self.text
 
 class ClassifiedClause(BaseModel):
     """Represents a clause that has been classified into a specific legal category."""
