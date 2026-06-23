@@ -181,6 +181,16 @@ class Reporter:
 
     def display_cli_summary(self, run_data: List[Dict[str, Any]], scorecard_data: List[Dict[str, Any]]) -> None:
         """Prints clean summary tables to the console."""
+        has_critical = (
+            any(s.get("risk_tier") == "CRITICAL" for s in scorecard_data) or
+            any(c.get("risk_tier") == "CRITICAL" for c in run_data)
+        )
+        
+        if has_critical:
+            print("\n" + "!" * 80)
+            print("⚠️  CRITICAL RISK ALERT: CRITICAL RISK DETECTED  ⚠️".center(80))
+            print("!" * 80)
+
         print("\n" + "=" * 80)
         print("CONTRACT AUDIT SUMMARY".center(80))
         print("=" * 80)

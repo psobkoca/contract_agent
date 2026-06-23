@@ -40,30 +40,19 @@ class ClauseClassifier:
             self.nli_pipeline = pipeline("zero-shot-classification", model="cross-encoder/nli-distilroberta-base")
         return self.nli_pipeline
 
-    def predict_clause(self, text: str) -> Tuple[str, float, bool]:
-        """Predicts the clause type and confidence for a given text, utilizing NLI fallback if confidence is low."""
-        from config import config
-        confidence_threshold = config.classifier.confidence_threshold
-
+    def predict_sklearn(self, text: str) -> Tuple[str, float]:
+        """Predicts the clause type and confidence using only the trained Scikit-Learn classifier model."""
         if self.pipeline is None:
             raise RuntimeError("Classifier has not been initialized. Call init_classifier() first.")
 
-        # 1. Scikit-Learn prediction
         probs = self.pipeline.predict_proba([text])[0]
         max_idx = np.argmax(probs)
         pred_class = self.classes_[max_idx]
         confidence = float(probs[max_idx])
+        return pred_class, confidence
 
-        # 2. Check if confidence meets threshold
-        if confidence >= confidence_threshold:
-            return pred_class, confidence, False
-
-        # 3. Fallback to Zero-Shot NLI
-        logger.warning(
-            f"Low confidence ({confidence:.2f} < {confidence_threshold:.2f}) for clause: '{text[:60]}...'. "
-            "Triggering Zero-Shot NLI fallback..."
-        )
-        
+    def predict_nli_fallback(self, text: str) -> Tuple[str, float]:
+        """Predicts the clause type and confidence using the zero-shot NLI fallback classifier."""
         candidate_labels = [
             "Liability", "Indemnification", "Payment", "Termination", "IP", 
             "Confidentiality", "Governing_Law", "Force_Majeure", "Dispute_Resolution", "Other"
@@ -74,7 +63,26 @@ class ClauseClassifier:
         
         nli_class = res["labels"][0]
         nli_confidence = float(res["scores"][0])
+        return nli_class, nli_confidence
+
+    def predict_clause(self, text: str) -> Tuple[str, float, bool]:
+        """Predicts the clause type and confidence for a given text, utilizing NLI fallback if confidence is low."""
+        from config import config
+        confidence_threshold = config.classifier.confidence_threshold
+
+        pred_class, confidence = self.predict_sklearn(text)
+
+        # Check if confidence meets threshold
+        if confidence >= confidence_threshold:
+            return pred_class, confidence, False
+
+        # Fallback to Zero-Shot NLI
+        logger.warning(
+            f"Low confidence ({confidence:.2f} < {confidence_threshold:.2f}) for clause: '{text[:60]}...'. "
+            "Triggering Zero-Shot NLI fallback..."
+        )
         
+        nli_class, nli_confidence = self.predict_nli_fallback(text)
         logger.success(f"NLI Fallback completed: predicted '{nli_class}' with confidence {nli_confidence:.2f}")
         return nli_class, nli_confidence, True
 
