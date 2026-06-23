@@ -78,6 +78,22 @@ class ClauseClassifier:
         logger.success(f"NLI Fallback completed: predicted '{nli_class}' with confidence {nli_confidence:.2f}")
         return nli_class, nli_confidence, True
 
+    def get_risk_flag(self, clause_type: str, confidence: float) -> str:
+        """Assigns risk flag based on clause type and prediction confidence."""
+        from config import config
+        high_risk_types = config.classifier.high_risk_types
+        
+        if clause_type in high_risk_types:
+            if confidence > 0.60:
+                return "HIGH_RISK"
+            else:
+                return "REVIEW_REQUIRED"
+        else:
+            if confidence >= 0.60:
+                return "LOW_RISK"
+            else:
+                return "REVIEW_REQUIRED"
+
     def get_csv_hash(self) -> str:
         """Computes SHA-256 hash of the training CSV file."""
         if not os.path.exists(self.training_csv):
