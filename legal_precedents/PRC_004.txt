@@ -1,0 +1,15 @@
+GDPR COMPLIANCE PLAYBOOK
+DOCUMENT ID: PRC_004
+TYPE: Regulatory Guidance
+CATEGORY: Confidentiality
+
+This document outlines regulatory guidelines for standard data processing.
+
+SECTION 1: DATA CONTROLLER TO DATA PROCESSOR TRANSFERS
+Under GDPR Article 28, a written contract is required. The contract must contain standard clauses detailing:
+- The subject matter and duration of the processing.
+- The nature and purpose of the processing.
+- The types of personal data and categories of data subjects.
+
+SECTION 2: DATA SUB-PROCESSING
+Processors must obtain prior written consent from controllers before appointing sub-processors.

@@ -1,0 +1,9 @@
+PAYMENT TERMS NEGOTIATION GUIDE
+DOCUMENT ID: PRC_006
+TYPE: Negotiation Playbook
+CATEGORY: Payment Terms
+
+STRATEGY OUTLINE:
+- Target Position: Net 30 payment terms, 1.5% monthly late fee, and right to suspend services after 10 days overdue.
+- Alternate Position 1: Net 45 payment terms, 1.0% late fee, right to suspend after 30 days overdue.
+- Walkaway Point: Net 90 payment terms with no late fees or suspension rights.

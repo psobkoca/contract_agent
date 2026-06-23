@@ -1,0 +1,21 @@
+file_name,title,document_type,category,description
+PRC_001.txt,Standard Mutual Non-Disclosure Agreement (NDA) Template,Clause Template,Confidentiality,"Fictional boilerplate document containing mutual confidentiality clauses, carve-outs, return of materials, and standard remedies."
+PRC_002.txt,Governing Law and Forum Selection Guidelines,Regulatory Guidance,Governing Law,Regulatory and risk assessment guidelines for selecting governing law jurisdictions and forum venue options.
+PRC_003.txt,Limitation of Liability Negotiation Playbook,Negotiation Playbook,Limitation of Liability,Negotiation rules and fallback positions for limiting aggregate and consequential damages liability.
+PRC_004.txt,GDPR Compliance and Data Privacy Playbook,Regulatory Guidance,Confidentiality,"Regulatory playbook outlining compliance requirements for data processing, data transfers, and standard contractual clauses."
+PRC_005.txt,Master Services Agreement (MSA) Boilerplate,Clause Template,Payment Terms,"Standard boilerplate containing general payment terms, net payment days, and invoice dispute mechanisms."
+PRC_006.txt,Payment Term Negotiation Strategy Guide,Negotiation Playbook,Payment Terms,"Strategic instructions for negotiating client payment terms, handling net 30/45/60, and setting interest on late payments."
+PRC_007.txt,Intellectual Property Transfer and Assignment Agreement,Clause Template,Intellectual Property,Standard template for assigning intellectual property rights from independent contractors to a hiring company.
+PRC_008.txt,Force Majeure Checklist and Draft Clause,Negotiation Playbook,Force Majeure,"Negotiation checklist for force majeure events, exclusions, and termination thresholds."
+PRC_009.txt,Dispute Resolution and Arbitration Procedures,Regulatory Guidance,Dispute Resolution,Regulatory and procedural guidelines for executing binding commercial arbitration under AAA or JAMS rules.
+PRC_010.txt,Indemnification Risk Allocation Guide,Clause Template,Indemnification,Mutual indemnification boilerplate clauses for third-party intellectual property and general commercial claims.
+PRC_011.txt,SaaS Service Level Agreement (SLA) Template,Clause Template,Termination,"Standard SaaS SLA boilerplate with uptime metrics, service credit formulas, and termination rights for chronic SLA failures."
+PRC_012.txt,CCPA / CPRA Consumer Privacy Compliance Guide,Regulatory Guidance,Confidentiality,Regulatory guidance detailing requirements under the California Consumer Privacy Act and California Privacy Rights Act.
+PRC_013.txt,Termination for Convenience Playbook,Negotiation Playbook,Termination,"Negotiation manual for handling termination for convenience, wind-down fees, and transitional services."
+PRC_014.txt,Assignment and Change of Control Playbook,Negotiation Playbook,Assignment,"Negotiation strategies for assignment restrictions, mergers, acquisitions, and change of control clauses."
+PRC_015.txt,HIPAA Business Associate Agreement (BAA) Template,Clause Template,Confidentiality,Standard HIPAA BAA boilerplate for managing protected health information (PHI) between covered entities and business associates.
+PRC_016.txt,Software End-User License Agreement (EULA) Template,Clause Template,Intellectual Property,"Standard license grant template containing restrictions on reverse engineering, hosting, and redistribution."
+PRC_017.txt,EU Standard Contractual Clauses (SCCs) Guidance,Regulatory Guidance,Confidentiality,Regulatory guide for implementing the European Commission's standard contractual clauses for international data transfers.
+PRC_018.txt,Audit and Financial Review Rights Clause,Clause Template,Payment Terms,"Standard clause template specifying audit rights, financial record retention, and payment discrepancy remedies."
+PRC_019.txt,Export Control and Sanctions Compliance Playbook,Negotiation Playbook,Governing Law,"Negotiation playbook mapping compliance requirements for US, EU, and international export controls and trade sanctions."
+PRC_020.txt,Warranty and Disclaimers Boilerplate Clause,Clause Template,Indemnification,Standard warranty disclaimer template containing exclusions for merchantability and fitness for a particular purpose.

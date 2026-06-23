@@ -1,0 +1,15 @@
+MUTUAL NDA TEMPLATE (STANDARD)
+DOCUMENT ID: PRC_001
+TYPE: Clause Template
+CATEGORY: Confidentiality
+
+This document contains standard boilerplate text for a Mutual Non-Disclosure Agreement.
+
+CLAUSE A: DEFINITION OF CONFIDENTIAL INFORMATION
+"Confidential Information" means any information disclosed by either party to the other party that is designated as confidential, or which reasonably should be understood to be confidential given the nature of the information.
+
+CLAUSE B: NON-DISCLOSURE OBLIGATIONS
+The Receiving Party shall keep the Disclosing Party's Confidential Information strictly confidential and shall not disclose it to any third party without prior written consent, except as required by law.
+
+CLAUSE C: STANDARD TERM
+The obligations under this Agreement shall survive for a period of five (5) years from the date of disclosure.

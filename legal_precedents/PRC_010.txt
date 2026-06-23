@@ -1,0 +1,9 @@
+INDEMNIFICATION ALLOCATION BOILERPLATE
+DOCUMENT ID: PRC_010
+TYPE: Clause Template
+CATEGORY: Indemnification
+
+SECTION 8: MUTUAL INDEMNIFICATION
+8.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Client from any third-party claims alleging that the software infringes any patent or copyright.
+8.2 Client Indemnity. Client shall defend, indemnify, and hold harmless Provider from any claims arising out of Client's breach of law or customer data infringement.
+8.3 Conditions. Indemnification is conditioned on prompt notice and sole control of the defense.

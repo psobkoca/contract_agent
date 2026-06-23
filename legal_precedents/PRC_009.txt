@@ -1,0 +1,14 @@
+DISPUTE RESOLUTION GUIDANCE DOCUMENT
+DOCUMENT ID: PRC_009
+TYPE: Regulatory Guidance
+CATEGORY: Dispute Resolution
+
+OVERVIEW OF ARBITRATION:
+Arbitration is private dispute resolution. JAMS and AAA are the most common providers.
+
+PROCEDURE:
+1. Filing: The claimant files a demand for arbitration.
+2. Selection: The parties select a neutral arbitrator from the provider's panel.
+3. Discovery: Limited exchange of documents and depositions.
+4. Hearing: The arbitrator hears arguments and issues a binding award.
+5. Enforcement: The award is enforced in federal or state court.

@@ -1,0 +1,9 @@
+TERMINATION FOR CONVENIENCE PLAYBOOK
+DOCUMENT ID: PRC_013
+TYPE: Negotiation Playbook
+CATEGORY: Termination
+
+NEGOTIATION PROTOCOLS:
+- Target: No termination for convenience for either party during the initial term.
+- Fallback 1: Unilateral right for customer only, upon 90 days notice and payment of a wind-down fee equal to 3 months of fees.
+- Fallback 2: Mutual right to terminate upon 180 days notice, with transition support billed at standard consulting rates.

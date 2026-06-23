@@ -1,0 +1,10 @@
+IP TRANSFER AND ASSIGNMENT TEMPLATE
+DOCUMENT ID: PRC_007
+TYPE: Clause Template
+CATEGORY: Intellectual Property
+
+SECTION 1: IP ASSIGNMENT
+Contractor hereby irrevocably assigns and transfers to Company all right, title, and interest in and to all deliverables, software, designs, and patentable ideas developed in connection with this contract.
+
+SECTION 2: WORKS MADE FOR HIRE
+All work products created under this Agreement shall be considered "works made for hire" under US Copyright law. To the extent they do not qualify, this Agreement serves as an assignment of all such rights.

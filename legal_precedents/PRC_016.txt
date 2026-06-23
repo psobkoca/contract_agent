@@ -1,0 +1,13 @@
+SOFTWARE EULA TEMPLATE
+DOCUMENT ID: PRC_016
+TYPE: Clause Template
+CATEGORY: Intellectual Property
+
+SECTION 1: LICENSE GRANT
+Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
+
+SECTION 2: LICENSE RESTRICTIONS
+Licensee shall not:
+- Reverse engineer, decompile, or disassemble the Software.
+- Copy, modify, or create derivative works.
+- Rent, lease, or distribute the Software to third parties.

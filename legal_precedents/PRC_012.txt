@@ -1,0 +1,13 @@
+CCPA COMPLIANCE GUIDELINES
+DOCUMENT ID: PRC_012
+TYPE: Regulatory Guidance
+CATEGORY: Confidentiality
+
+This guide details California privacy compliance standards.
+
+SECTION 1: CONSUMER RIGHTS
+Consumers have the right to know, delete, and correct personal information collected by businesses.
+Businesses must provide a "Do Not Sell or Share My Personal Information" link.
+
+SECTION 2: SERVICE PROVIDER CONTRACTS
+Contracts with service providers must restrict them from retaining, using, or disclosing personal data for any purpose other than performing the services.

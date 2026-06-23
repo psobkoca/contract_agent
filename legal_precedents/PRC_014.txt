@@ -1,0 +1,12 @@
+ASSIGNMENT & CHANGE OF CONTROL PLAYBOOK
+DOCUMENT ID: PRC_014
+TYPE: Negotiation Playbook
+CATEGORY: Assignment
+
+NEGO-RULES:
+Rule 1: Always allow assignment to affiliates or successors in a merger without consent.
+Rule 2: Restrict assignment to direct competitors of the non-assigning party.
+Rule 3: Ensure notice is given within 30 days of the assignment.
+
+FALLBACK CLAUSES:
+"Neither party may assign this Agreement without consent, except that either party may assign to a successor in a merger, acquisition, or sale of assets."

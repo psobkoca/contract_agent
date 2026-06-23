@@ -1,0 +1,15 @@
+EU SCC COMPLIANCE GUIDE
+DOCUMENT ID: PRC_017
+TYPE: Regulatory Guidance
+CATEGORY: Confidentiality
+
+This guide addresses EU standard contractual clauses.
+
+SECTION 1: BACKGROUND
+SCCs are standard contracts approved by the European Commission to provide adequate safeguards for data transfers from the EEA to third countries.
+
+SECTION 2: MODULE SELECTION
+- Module 1: Controller-to-Controller transfers.
+- Module 2: Controller-to-Processor transfers.
+- Module 3: Processor-to-Processor transfers.
+- Module 4: Processor-to-Controller transfers.

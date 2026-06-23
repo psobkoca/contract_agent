@@ -1,0 +1,12 @@
+EXPORT CONTROL & SANCTIONS PLAYBOOK
+DOCUMENT ID: PRC_019
+TYPE: Negotiation Playbook
+CATEGORY: Governing Law
+
+NEGO-RULES:
+Rule 1: Always include a warranty that neither party is on any OFAC sanctions lists.
+Rule 2: Restrict the export or re-export of software to embargoed countries.
+Rule 3: Ensure governing law includes compliance with the Export Administration Regulations (EAR).
+
+FALLBACK CLAUSE:
+"Each party warrants that it is in compliance with all applicable export controls, import regulations, and trade sanctions laws."

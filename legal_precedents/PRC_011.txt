@@ -1,0 +1,12 @@
+SAAS SERVICE LEVEL AGREEMENT (SLA)
+DOCUMENT ID: PRC_011
+TYPE: Clause Template
+CATEGORY: Termination
+
+SECTION 1: SERVICE AVAILABILITY
+Provider warrants that the Service shall have an uptime availability of at least 99.9% in any calendar month.
+
+SECTION 2: SLA CREDITS
+If uptime falls below 99.9%, Customer is entitled to service credits as follows:
+- Uptime 99.0% - 99.8%: 10% credit of monthly fee.
+- Uptime < 99.0%: 25% credit of monthly fee and right to terminate for cause.

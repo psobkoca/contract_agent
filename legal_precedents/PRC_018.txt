@@ -1,0 +1,9 @@
+AUDIT RIGHTS BOILERPLATE CLAUSE
+DOCUMENT ID: PRC_018
+TYPE: Clause Template
+CATEGORY: Payment Terms
+
+SECTION 12: AUDIT RIGHTS
+12.1 Audits. Client shall have the right, once per year and upon 30 days notice, to audit Vendor's financial records related to services performed.
+12.2 Cost. The audit shall be at Client's expense, unless the audit reveals an overcharge of more than five percent (5%), in which case Vendor shall reimburse the audit costs.
+12.3 Retention. Vendor shall keep records for three (3) years.

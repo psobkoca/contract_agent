@@ -1,0 +1,12 @@
+HIPAA BUSINESS ASSOCIATE AGREEMENT (BAA)
+DOCUMENT ID: PRC_015
+TYPE: Clause Template
+CATEGORY: Confidentiality
+
+This template is for Business Associate relationship management.
+
+SECTION 2: PERMITTED USES AND DISCLOSURES
+Business Associate may use or disclose PHI only to perform the services specified in the Service Agreement, provided that such use or disclosure would not violate the Privacy Rule if done by Covered Entity.
+
+SECTION 5: BREACH NOTIFICATION
+Business Associate shall notify Covered Entity within twenty-four (24) hours of discovering any breach of unsecured PHI.

@@ -1,0 +1,9 @@
+MASTER SERVICES AGREEMENT TEMPLATE
+DOCUMENT ID: PRC_005
+TYPE: Clause Template
+CATEGORY: Payment Terms
+
+SECTION 3: PAYMENT AND BILLING
+3.1 Invoices. Service Provider shall invoice Client monthly. Client shall pay all undisputed invoice amounts within thirty (30) days of receipt (Net 30).
+3.2 Late Payments. Late payments shall bear interest at 1.5% per month or the highest legal rate.
+3.3 Billing Disputes. Client must notify Service Provider in writing of any billing disputes within fifteen (15) days of invoice receipt.

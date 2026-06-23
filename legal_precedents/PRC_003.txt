@@ -1,0 +1,13 @@
+LIMITATION OF LIABILITY PLAYBOOK
+DOCUMENT ID: PRC_003
+TYPE: Negotiation Playbook
+CATEGORY: Limitation of Liability
+
+NEGO-RULES:
+Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
+Rule 2: Cap total liability at 12 months fees paid.
+Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
+
+FALLBACK POSITIONS:
+- Fallback 1: Cap at 2x annual contract value.
+- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.

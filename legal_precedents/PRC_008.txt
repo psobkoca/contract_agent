@@ -1,0 +1,13 @@
+FORCE MAJEURE NEGOTIATION CHECKLIST
+DOCUMENT ID: PRC_008
+TYPE: Negotiation Playbook
+CATEGORY: Force Majeure
+
+CHECKLIST ITEMS:
+- Does the clause explicitly list pandemics, epidemics, and government shutdowns?
+- Are payment obligations carved out from force majeure relief?
+- Is there a termination threshold (e.g., 60 days of continuous force majeure)?
+- Must the affected party provide immediate written notice (within 48 hours)?
+
+DRAFT CLAUSE:
+"Neither party shall be liable for delays caused by acts of God, war, riot, or pandemics, provided that payment obligations are not excused."
