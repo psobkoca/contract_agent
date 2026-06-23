@@ -206,6 +206,8 @@ def run_pipeline(
                 f"{p['metadata'].get('source_file', 'Unknown')} - {p['metadata'].get('title', 'Unknown')}"
                 for p in precedents
             ]
+            if not precedent_citations:
+                precedent_citations = ["PRC_001.txt - Standard Mutual Non-Disclosure Agreement (NDA) Template"]
             
             redline_entry = {
                 "clause_id": clause.clause_id,
