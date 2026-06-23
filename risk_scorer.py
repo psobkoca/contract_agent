@@ -167,9 +167,10 @@ class RiskScorer:
         # Lazy-load sentence transformer model if not provided
         model = self.embedding_model
         if model is None:
-            logger.info("Initializing lazy SentenceTransformer model in RiskScorer...")
+            model_ver = config.reproducibility.embedding_model_version
+            logger.info(f"Initializing lazy SentenceTransformer model ({model_ver}) in RiskScorer...")
             from sentence_transformers import SentenceTransformer
-            model = SentenceTransformer("all-MiniLM-L6-v2")
+            model = SentenceTransformer(model_ver)
             self.embedding_model = model
             
         clause_emb = model.encode(clause_text)

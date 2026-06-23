@@ -136,14 +136,17 @@ class ClauseClassifier:
         if not texts:
             raise ValueError(f"No valid training data found in {self.training_csv}")
 
+        from config import config
+        seed = config.reproducibility.classifier_seed
+
         # Compute validation metrics on a train/test split (FR-08)
         X_train, X_test, y_train, y_test = train_test_split(
-            texts, labels, test_size=0.2, random_state=42, stratify=labels
+            texts, labels, test_size=0.2, random_state=seed, stratify=labels
         )
         
         val_pipeline = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
-            ('clf', LogisticRegression(max_iter=1000, C=1.0))
+            ('clf', LogisticRegression(max_iter=1000, C=1.0, random_state=seed))
         ])
         val_pipeline.fit(X_train, y_train)
         y_pred = val_pipeline.predict(X_test)
@@ -164,7 +167,7 @@ class ClauseClassifier:
         logger.info(f"Fitting final Logistic Regression model on all {len(texts)} samples...")
         self.pipeline = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=5000, ngram_range=(1, 2))),
-            ('clf', LogisticRegression(max_iter=1000, C=1.0))
+            ('clf', LogisticRegression(max_iter=1000, C=1.0, random_state=seed))
         ])
         
         self.pipeline.fit(texts, labels)

@@ -66,8 +66,9 @@ class RAGEngine:
         self.collection = None
         
         # Dense Embedding Model (FR-10)
-        logger.info("Initializing SentenceTransformer model (all-MiniLM-L6-v2)...")
-        self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        model_ver = config.reproducibility.embedding_model_version
+        logger.info(f"Initializing SentenceTransformer model ({model_ver})...")
+        self.embedding_model = SentenceTransformer(model_ver)
         
         # Reranker Model (FR-12)
         logger.info("Initializing CrossEncoder model (cross-encoder/ms-marco-MiniLM-L-6-v2)...")

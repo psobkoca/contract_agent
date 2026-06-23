@@ -65,6 +65,10 @@ class SafetyConfig(BaseModel):
         "All suggested redlines must be reviewed and approved by qualified legal counsel before use."
     )
 
+class ReproducibilityConfig(BaseModel):
+    classifier_seed: int = 42
+    embedding_model_version: str = "all-MiniLM-L6-v2"
+
 class AppConfig(BaseModel):
     llm: LLMConfig = LLMConfig()
     parsing: ParsingConfig = ParsingConfig()
@@ -74,6 +78,7 @@ class AppConfig(BaseModel):
     agent: AgentConfig = AgentConfig()
     output: OutputConfig = OutputConfig()
     safety: SafetyConfig = SafetyConfig()
+    reproducibility: ReproducibilityConfig = ReproducibilityConfig()
     org_profile: Dict[str, Any] = {}
 
 # Load YAML datasets
@@ -89,6 +94,7 @@ risk_scoring_dict = yaml_data.get("risk_scoring", {})
 agent_dict = yaml_data.get("agent", {})
 output_dict = yaml_data.get("output", {})
 safety_dict = yaml_data.get("safety", {})
+reproducibility_dict = yaml_data.get("reproducibility", {})
 
 config = AppConfig(
     llm=LLMConfig(**llm_dict) if llm_dict else LLMConfig(),
@@ -99,5 +105,6 @@ config = AppConfig(
     agent=AgentConfig(**agent_dict) if agent_dict else AgentConfig(),
     output=OutputConfig(**output_dict) if output_dict else OutputConfig(),
     safety=SafetyConfig(**safety_dict) if safety_dict else SafetyConfig(),
+    reproducibility=ReproducibilityConfig(**reproducibility_dict) if reproducibility_dict else ReproducibilityConfig(),
     org_profile=org_data.get("org_profile", {})
 )
