@@ -188,6 +188,65 @@ class RAGEngine:
         self.bm25 = BM25(corpus=documents, chunk_ids=ids)
         logger.success(f"BM25 index built with {len(documents)} passages.")
 
+    def hybrid_search(self, query_text: str, top_k: Optional[int] = None) -> List[dict]:
+        """Performs hybrid search: dense cosine similarity + sparse BM25 merged via RRF (FR-11)."""
+        if top_k is None:
+            top_k = config.rag.top_k
+
+        if self.collection is None or self.bm25 is None:
+            raise RuntimeError("RAGEngine is not initialized. Call build_or_load_vector_store() first.")
+
+        # 1. Dense Search (ChromaDB Cosine similarity query)
+        query_emb = self.embedding_model.encode(query_text).tolist()
+        # Retrieve n_results=corpus_size to get a full ranking for RRF
+        corpus_size = len(self.chunk_map)
+        dense_results = self.collection.query(
+            query_embeddings=[query_emb], 
+            n_results=corpus_size
+        )
+        dense_ids = dense_results.get("ids", [[]])[0]
+        dense_ranks = {chunk_id: rank + 1 for rank, chunk_id in enumerate(dense_ids)}
+
+        # 2. Sparse Search (BM25)
+        bm25_scores = self.bm25.get_scores(query_text)
+        # Sort all chunks by BM25 score descending
+        sorted_bm25_ids = sorted(bm25_scores.keys(), key=lambda x: bm25_scores[x], reverse=True)
+        # Rank only documents that have a positive score
+        sparse_ranks = {}
+        rank_idx = 1
+        for cid in sorted_bm25_ids:
+            if bm25_scores[cid] > 0.0:
+                sparse_ranks[cid] = rank_idx
+                rank_idx += 1
+
+        # 3. Reciprocal Rank Fusion (RRF) Merge
+        rrf_scores = {}
+        for chunk_id in self.chunk_map.keys():
+            d_rank = dense_ranks.get(chunk_id, 99999)
+            s_rank = sparse_ranks.get(chunk_id, 99999)
+            
+            # Standard RRF formula: 1 / (60 + rank)
+            rrf_score = 1.0 / (60.0 + d_rank) + 1.0 / (60.0 + s_rank)
+            rrf_scores[chunk_id] = rrf_score
+
+        # Sort chunk IDs by RRF score descending
+        top_chunk_ids = sorted(self.chunk_map.keys(), key=lambda x: rrf_scores[x], reverse=True)[:top_k]
+
+        # Construct final results list
+        results = []
+        for cid in top_chunk_ids:
+            results.append({
+                "chunk_id": cid,
+                "text": self.chunk_map[cid]["text"],
+                "metadata": self.chunk_map[cid]["metadata"],
+                "rrf_score": rrf_scores[cid],
+                "dense_rank": dense_ranks.get(cid, -1),
+                "sparse_rank": sparse_ranks.get(cid, -1)
+            })
+
+        logger.info(f"Hybrid search returned top-{len(results)} candidate passages.")
+        return results
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Legal RAG Knowledge Base Builder")
