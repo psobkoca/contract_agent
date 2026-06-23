@@ -36,11 +36,23 @@ class RAGConfig(BaseModel):
         description="Number of candidate passages to retrieve in hybrid search before reranking."
     )
 
+class AgentConfig(BaseModel):
+    """Configuration settings for the Review Agent."""
+    max_clauses_per_run: int = Field(
+        10,
+        description="Maximum number of clauses to analyze per contract run."
+    )
+    model: str = Field(
+        "claude-sonnet-4-20250514",
+        description="The target Anthropic model to call."
+    )
+
 class AppConfig(BaseSettings):
     """Application-wide settings loader."""
     parsing: ParsingConfig = ParsingConfig()
     classifier: ClassifierConfig = ClassifierConfig()
     rag: RAGConfig = RAGConfig()
+    agent: AgentConfig = AgentConfig()
 
     model_config = SettingsConfigDict(
         env_nested_delimiter="__",
