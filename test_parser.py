@@ -77,3 +77,15 @@ def test_parser_main_cli(tmp_path):
             
     assert os.path.exists(out_json)
 
+
+def test_parser_ac1():
+    import os
+    files = ["CTR_001.pdf", "CTR_002.docx", "CTR_003.pdf", "CTR_004.docx", "CTR_005.pdf"]
+    for filename in files:
+        filepath = os.path.join("contracts", filename)
+        clauses = parse_contract(filepath)
+        assert len(clauses) > 0
+        for c in clauses:
+            assert c.counterparty_name is not None
+            assert len(c.counterparty_name) > 0
+
