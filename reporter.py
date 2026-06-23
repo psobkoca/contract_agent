@@ -61,9 +61,9 @@ class Reporter:
         self.generate_csv_redlines(run_data)
         self.display_cli_summary(run_data, scorecard_data)
 
-    def generate_json_log(self, run_data: List[Dict[str, Any]]) -> str:
-        """Saves a detailed JSON review log containing all analyzed clauses and suggestions."""
-        filename = f"review_log_{self.run_id}.json"
+    def generate_json_log(self, run_data: Any) -> str:
+        """Saves a detailed JSON review log containing all analyzed clauses and suggestions (FR-22)."""
+        filename = f"{self.run_id}.json"
         path = os.path.join(self.output_dir, filename)
         
         try:

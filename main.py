@@ -188,6 +188,7 @@ def run_pipeline(
     logger.info("Steps 8 & 9: Running LLM Agent review loop for selected clauses...")
     agent = ContractAgent(llm_client=None, rag_engine=rag, risk_scorer=scorer)
     all_reviewed_clauses = []
+    contract_redlines = {cid: [] for cid in contracts_clauses.keys()}
     
     for item in selected_clauses:
         clause = item["clause"]
@@ -213,9 +214,13 @@ def run_pipeline(
                 "walk_away_trigger": res.walk_away_trigger,
                 "confidence_score": res.confidence_score,
                 "legal_disclaimer": res.legal_disclaimer,
-                "fallback_mode": res.fallback_mode
+                "fallback_mode": res.fallback_mode,
+                "loop_count": res.loop_count,
+                "latency_ms": res.latency_ms
             }
             all_reviewed_clauses.append(redline_entry)
+            if contract_id in contract_redlines:
+                contract_redlines[contract_id].append(redline_entry)
             
             # Log critical alerts to critical_clauses.log
             if tier == "CRITICAL":
@@ -228,9 +233,57 @@ def run_pipeline(
         except Exception as e:
             logger.error(f"Failed to review clause {clause.clause_id}: {e}")
 
+    # Build FR-22 compliant JSON log payload
+    import datetime
+    run_timestamp = datetime.datetime.utcnow().isoformat() + "Z"
+    
+    contract_review_logs = []
+    for contract_id, clauses in contracts_clauses.items():
+        first_clause = clauses[0]
+        counterparty_name = first_clause.counterparty_name or "Unknown"
+        
+        redlines = contract_redlines.get(contract_id, [])
+        clauses_reviewed_by_llm = len(redlines)
+        
+        risk_tier_distribution = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        scored_items = scored_contracts_clauses.get(contract_id, [])
+        for item in scored_items:
+            tier = item["tier"]
+            if tier == "LOW_RISK":
+                tier = "LOW"
+            if tier in risk_tier_distribution:
+                risk_tier_distribution[tier] += 1
+                
+        loop_count = sum(r.get("loop_count", 0) for r in redlines)
+        fallback_mode = any(r.get("fallback_mode", False) for r in redlines)
+        latency_ms = sum(r.get("latency_ms", 0) for r in redlines)
+        
+        contract_summary = (
+            f"Review of contract {contract_id} with counterparty {counterparty_name}. "
+            f"A total of {len(clauses)} clauses were parsed, of which {clauses_reviewed_by_llm} "
+            f"high or critical risk clauses were reviewed by the LLM."
+        )
+        
+        log_data = {
+            "contract_id": contract_id,
+            "counterparty_name": counterparty_name,
+            "run_timestamp": run_timestamp,
+            "contract_summary": contract_summary,
+            "total_clauses": len(clauses),
+            "clauses_reviewed_by_llm": clauses_reviewed_by_llm,
+            "risk_tier_distribution": risk_tier_distribution,
+            "redlines": redlines,
+            "loop_count": loop_count,
+            "fallback_mode": fallback_mode,
+            "latency_ms": latency_ms
+        }
+        contract_review_logs.append(log_data)
+        
+    json_log_payload = contract_review_logs[0] if len(contract_review_logs) == 1 else contract_review_logs
+
     # Step 10: Write JSON log, Markdown memo (disclaimer top+bottom), redlines.csv; print CLI summary with CRITICAL RISK ALERT if applicable.
     logger.info("Step 10: Writing JSON log, Markdown memo, redlines.csv, and displaying CLI summary...")
-    reporter.generate_json_log(all_reviewed_clauses)
+    reporter.generate_json_log(json_log_payload)
     reporter.generate_markdown_memo(all_reviewed_clauses)
     reporter.generate_csv_redlines(all_reviewed_clauses)
     reporter.display_cli_summary(all_reviewed_clauses, scorecard_data)

@@ -22,6 +22,8 @@ class LLMResponse(BaseModel):
     confidence_score: float = Field(..., description="LLM confidence score between 0.0 and 1.0.")
     legal_disclaimer: str = Field(..., description="The mandatory legal disclaimer verbatim text.")
     fallback_mode: bool = Field(False, description="Flag indicating if fallback mode was activated.")
+    loop_count: Optional[int] = Field(0, description="Number of ReAct loop turns executed.")
+    latency_ms: Optional[int] = Field(0, description="Time taken for the review in milliseconds.")
 
     @field_validator("legal_disclaimer")
     @classmethod
@@ -137,16 +139,24 @@ class ContractAgent:
         )
         
         # 3. Execute ReAct Loop (with fallback)
+        self.last_loop_count = 0
+        import time
+        start_time = time.perf_counter()
         try:
             final_text = self._run_react_loop(clause, user_prompt)
             response_data = self._parse_and_validate(final_text)
+            response_data.loop_count = self.last_loop_count
+            response_data.latency_ms = int((time.perf_counter() - start_time) * 1000)
             return response_data
         except Exception as e:
             logger.warning(
                 f"ReAct loop or response validation failed for clause {clause.clause_id}: {e}. "
                 f"Triggering RAG fallback."
             )
-            return self._rag_fallback(clause)
+            response_data = self._rag_fallback(clause)
+            response_data.loop_count = self.last_loop_count
+            response_data.latency_ms = int((time.perf_counter() - start_time) * 1000)
+            return response_data
 
     def _format_precedent_context(self, precedents: List[dict]) -> str:
         if not precedents:
@@ -167,6 +177,7 @@ class ContractAgent:
         
         max_turns = 3
         for turn in range(max_turns):
+            self.last_loop_count = turn + 1
             logger.info(f"ReAct Loop Turn {turn+1}/{max_turns} for clause {clause.clause_id}")
             
             # Send message to Claude
