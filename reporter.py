@@ -227,27 +227,27 @@ class Reporter:
         return path
 
     def generate_csv_redlines(self, run_data: List[Dict[str, Any]]) -> str:
-        """Generates redlines.csv containing clause-level suggestions and flags."""
+        """Generates redlines.csv containing clause-level suggestions and flags (FR-24)."""
         path = os.path.join(self.output_dir, "redlines.csv")
         
         try:
             with open(path, mode="w", encoding="utf-8", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=[
-                    "contract_id", "clause_id", "original_text", "suggested_redline", 
-                    "rationale", "negotiation_priority", "fallback_mode"
+                    "clause_id", "section_number", "clause_type", "risk_tier", 
+                    "risk_score", "negotiation_priority", "walk_away_trigger", "redlined_clause_excerpt"
                 ])
                 writer.writeheader()
                 for c in run_data:
-                    # Extract contract_id from clause_id (e.g. CTR_003_CLS_006 -> CTR_003)
-                    contract_id = c["clause_id"].split("_CLS_")[0] if "_CLS_" in c["clause_id"] else "Unknown"
+                    excerpt = (c.get("redlined_clause") or "")[:200]
                     writer.writerow({
-                        "contract_id": contract_id,
                         "clause_id": c["clause_id"],
-                        "original_text": c["raw_text"],
-                        "suggested_redline": c["redlined_clause"],
-                        "rationale": c["redline_rationale"],
+                        "section_number": c["section_number"],
+                        "clause_type": c["clause_type"],
+                        "risk_tier": c["risk_tier"],
+                        "risk_score": c["risk_score"],
                         "negotiation_priority": c["negotiation_priority"],
-                        "fallback_mode": c.get("fallback_mode", False)
+                        "walk_away_trigger": c["walk_away_trigger"],
+                        "redlined_clause_excerpt": excerpt
                     })
             logger.success(f"CSV redlines exported to {path}")
         except Exception as e:
@@ -288,26 +288,31 @@ class Reporter:
             tablefmt="grid"
         ))
         
-        # 2. Critical/High Clauses Reviewed Table
+        # 2. Critical/High Clauses Reviewed Table (FR-24)
         clause_rows = []
-        for c in run_data:
-            contract_id = c["clause_id"].split("_CLS_")[0] if "_CLS_" in c["clause_id"] else "Unknown"
-            mode = "FALLBACK" if c.get("fallback_mode") is True else "LLM"
+        has_critical_clause = any(c.get("risk_tier") == "CRITICAL" for c in run_data)
+        
+        for idx, c in enumerate(run_data):
             clause_rows.append([
+                idx + 1,
                 c["clause_id"],
-                contract_id,
                 c["clause_type"],
-                c["risk_tier"],
                 f"{c['risk_score']:.4f}",
+                c["risk_tier"],
                 c["negotiation_priority"],
-                mode
+                c["walk_away_trigger"]
             ])
+            
+        if has_critical_clause:
+            print("\n" + "!" * 80)
+            print("⚠️  CRITICAL RISK ALERT: CRITICAL RISK DETECTED IN REVIEWED CLAUSES  ⚠️".center(80))
+            print("!" * 80)
             
         print("\n--- CRITICAL / HIGH CLAUSES REVIEW SUGGESTIONS ---")
         if clause_rows:
             print(tabulate(
                 clause_rows,
-                headers=["Clause ID", "Contract", "Type", "Tier", "Score", "Priority", "Mode"],
+                headers=["Rank", "Clause ID", "Type", "Risk Score", "Tier", "Priority", "Walk Away"],
                 tablefmt="grid"
             ))
         else:
