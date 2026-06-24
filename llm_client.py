@@ -301,6 +301,16 @@ class LLMClient:
                 
                 return OllamaMessageResponse(text, input_tokens, output_tokens)
                 
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code == 404:
+                    logger.error(f"Ollama model '{self.local_model}' not found on local instance (HTTP 404). Suggest pulling the model via 'ollama pull {self.local_model}'.")
+                    raise e
+                logger.warning(f"HTTP error on Ollama call attempt {attempt+1}/{max_attempts}: {e}")
+                if attempt == max_attempts - 1:
+                    logger.error("Max Ollama call attempts reached. Raising exception.")
+                    raise e
+                time.sleep(backoff)
+                backoff *= 2.0
             except Exception as e:
                 logger.warning(f"Transient error on Ollama call attempt {attempt+1}/{max_attempts}: {e}")
                 if attempt == max_attempts - 1:
