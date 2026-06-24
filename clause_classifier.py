@@ -53,7 +53,7 @@ class ClauseClassifier:
 
     def predict_nli_fallback(self, text: str) -> Tuple[str, float]:
         """Predicts the clause type and confidence using the zero-shot NLI fallback classifier."""
-        candidate_labels = list(self.classes_) if self.classes_ else [
+        candidate_labels = list(self.classes_) if self.classes_ is not None and len(self.classes_) > 0 else [
             "Liability", "Indemnification", "Payment", "Termination", "IP", 
             "Confidentiality", "Governing_Law", "Force_Majeure", "Dispute_Resolution", "Other"
         ]

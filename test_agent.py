@@ -591,3 +591,89 @@ def test_agent_ac9():
     assert (time.perf_counter() - start) < 120.0
 
 
+def test_ollama_fallback_success():
+    with patch("requests.get") as mock_get, patch("requests.post") as mock_post:
+        # Mock Ollama running status
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_get.return_value = mock_response_get
+        
+        # Mock Ollama chat response
+        mock_response_post = MagicMock()
+        mock_response_post.status_code = 200
+        mock_response_post.json.return_value = {
+            "message": {
+                "role": "assistant",
+                "content": "This is a local Ollama response."
+            },
+            "prompt_eval_count": 50,
+            "eval_count": 25
+        }
+        mock_post.return_value = mock_response_post
+        
+        # Unset ANTHROPIC_API_KEY environment variable if set
+        with patch.dict(os.environ, {}, clear=False):
+            if "ANTHROPIC_API_KEY" in os.environ:
+                del os.environ["ANTHROPIC_API_KEY"]
+            
+            client = LLMClient(api_key=None)
+            assert client.use_ollama is True
+            assert client.client is None
+            
+            res = client.create_message(messages=[{"role": "user", "content": "hello"}])
+            assert res.content[0].text == "This is a local Ollama response."
+            assert client.cumulative_cost == 0.0
+            assert client.cumulative_input_tokens == 50
+            assert client.cumulative_output_tokens == 25
+
+
+def test_ollama_not_running():
+    with patch("requests.get") as mock_get:
+        # Mock Ollama not running
+        mock_get.side_effect = Exception("Connection refused")
+        
+        with patch.dict(os.environ, {}, clear=False):
+            if "ANTHROPIC_API_KEY" in os.environ:
+                del os.environ["ANTHROPIC_API_KEY"]
+                
+            client = LLMClient(api_key=None)
+            assert client.use_ollama is False
+            
+            with pytest.raises(RuntimeError, match="Anthropic client is not initialized"):
+                client.create_message(messages=[{"role": "user", "content": "hello"}])
+
+
+def test_ollama_api_failure_and_rag_fallback():
+    with patch("requests.get") as mock_get, patch("requests.post") as mock_post:
+        # Mock Ollama running
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_get.return_value = mock_response_get
+        
+        # Mock Ollama API failing
+        mock_post.side_effect = Exception("Connection timeout")
+        
+        with patch.dict(os.environ, {}, clear=False):
+            if "ANTHROPIC_API_KEY" in os.environ:
+                del os.environ["ANTHROPIC_API_KEY"]
+                
+            client = LLMClient(api_key=None)
+            assert client.use_ollama is True
+            
+            # Since Ollama fails, reviewing a clause via agent should fall back to RAG playbook
+            agent = ContractAgent(llm_client=client)
+            clause = Clause(
+                clause_id="TEST_OLLAMA_FALLBACK_01",
+                raw_text="The buyer shall solely pay for everything unilaterally.",
+                governing_law_jurisdiction="Delaware",
+                contract_value_usd=100000.0,
+                clause_type="Liability",
+                risk_flag="HIGH_RISK"
+            )
+            
+            res = agent.review_clause(clause)
+            assert res.fallback_mode is True
+            assert res.legal_disclaimer == prompts.DISCLAIMER_TEXT
+            assert "Fallback Mode:" in res.redline_rationale
+
+

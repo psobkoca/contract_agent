@@ -26,6 +26,7 @@ def load_org_profile(filepath: str = "org_profile.yaml") -> Dict[str, Any]:
 class LLMConfig(BaseModel):
     provider: str = "anthropic"
     model: str = "claude-sonnet-4-20250514"
+    local_model: str = "llama3.2"
     max_tokens: int = 1500
     daily_spend_limit: float = 50.00
 

@@ -14,6 +14,22 @@ from anthropic import (
     APIStatusError
 )
 
+class OllamaUsage:
+    def __init__(self, input_tokens: int = 0, output_tokens: int = 0):
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+
+class OllamaTextBlock:
+    def __init__(self, text: str):
+        self.text = text
+        self.type = "text"
+
+class OllamaMessageResponse:
+    def __init__(self, text: str, input_tokens: int = 0, output_tokens: int = 0, stop_reason: str = "end_turn"):
+        self.content = [OllamaTextBlock(text)]
+        self.usage = OllamaUsage(input_tokens, output_tokens)
+        self.stop_reason = stop_reason
+
 class LLMClient:
     """Claude SDK wrapper with 3-retry, token guard, and cost logging."""
     
@@ -37,12 +53,22 @@ class LLMClient:
         self.cumulative_cost = 0.0
         self.cumulative_input_tokens = 0
         self.cumulative_output_tokens = 0
+        self.use_ollama = False
+        
+        from config import config
+        self.local_model = config.llm.local_model if hasattr(config.llm, "local_model") else "llama3.2"
         
         if self.api_key:
             self.client = anthropic.Anthropic(api_key=self.api_key)
         else:
-            logger.warning("ANTHROPIC_API_KEY environment variable is not set. Real LLM calls will fail.")
-            self.client = None
+            logger.warning("ANTHROPIC_API_KEY environment variable is not set. Checking for local Ollama...")
+            if self._check_ollama_status():
+                logger.info(f"Ollama is running locally. Falling back to local model: {self.local_model}")
+                self.use_ollama = True
+                self.client = None
+            else:
+                logger.warning("Ollama is not running locally. Real LLM calls will fail.")
+                self.client = None
 
     def count_tokens(self, text: str) -> int:
         """Counts tokens using tiktoken (cl100k_base) as a proxy for Claude's tokenizer."""
@@ -101,6 +127,9 @@ class LLMClient:
                     allowed_tokens = max(0, first_msg_tokens - excess)
                     first_msg["content"] = self.truncate_text_to_tokens(first_msg["content"], allowed_tokens)
             
+        if self.use_ollama:
+            return self._create_ollama_message(**kwargs)
+
         if not self.client:
             raise RuntimeError("Anthropic client is not initialized (missing API key).")
             
@@ -194,3 +223,88 @@ class LLMClient:
                 json.dump({"date": today, "spend": spend}, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save daily spend: {e}")
+
+    def _check_ollama_status(self) -> bool:
+        import requests
+        try:
+            response = requests.get("http://localhost:11434", timeout=1.0)
+            if response.status_code == 200:
+                return True
+        except Exception:
+            pass
+        return False
+
+    def _create_ollama_message(self, **kwargs) -> Any:
+        import requests
+        
+        ollama_messages = []
+        if "system" in kwargs and kwargs["system"]:
+            ollama_messages.append({
+                "role": "system",
+                "content": kwargs["system"]
+            })
+        if "messages" in kwargs:
+            for msg in kwargs["messages"]:
+                content = msg.get("content")
+                if isinstance(content, list):
+                    text_parts = []
+                    for block in content:
+                        if hasattr(block, "text"):
+                            text_parts.append(block.text)
+                        elif isinstance(block, dict) and "text" in block:
+                            text_parts.append(block["text"])
+                    content = "\n".join(text_parts)
+                ollama_messages.append({
+                    "role": msg.get("role", "user"),
+                    "content": content
+                })
+                
+        payload = {
+            "model": self.local_model,
+            "messages": ollama_messages,
+            "stream": False
+        }
+        
+        headers = {"Content-Type": "application/json"}
+        max_attempts = 4
+        backoff = 1.0
+        
+        for attempt in range(max_attempts):
+            try:
+                response = requests.post(
+                    "http://localhost:11434/api/chat",
+                    json=payload,
+                    headers=headers,
+                    timeout=30.0
+                )
+                response.raise_for_status()
+                res_data = response.json()
+                
+                text = res_data.get("message", {}).get("content", "")
+                input_tokens = res_data.get("prompt_eval_count", 0)
+                output_tokens = res_data.get("eval_count", 0)
+                
+                # Keep Ollama cost to $0.00
+                cost = 0.0
+                
+                self.cumulative_cost += cost
+                self.cumulative_input_tokens += input_tokens
+                self.cumulative_output_tokens += output_tokens
+                
+                logger.info(
+                    f"Ollama Call Successful | Cost: ${cost:.6f} | "
+                    f"In: {input_tokens} | Out: {output_tokens} | "
+                    f"Cumulative Cost: ${self.cumulative_cost:.6f}"
+                )
+                
+                self._add_to_daily_spend(cost)
+                
+                return OllamaMessageResponse(text, input_tokens, output_tokens)
+                
+            except Exception as e:
+                logger.warning(f"Transient error on Ollama call attempt {attempt+1}/{max_attempts}: {e}")
+                if attempt == max_attempts - 1:
+                    logger.error("Max Ollama call attempts reached. Raising exception.")
+                    raise e
+                time.sleep(backoff)
+                backoff *= 2.0

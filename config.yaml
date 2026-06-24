@@ -1,6 +1,7 @@
 llm:
   provider: anthropic
   model: claude-sonnet-4-20250514
+  local_model: llama3.2
   max_tokens: 1500
   daily_spend_limit: 50.00
 
