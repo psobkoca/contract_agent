@@ -1,84 +1,9 @@
-contract_id,clause_id,original_text,suggested_redline,rationale,negotiation_priority,fallback_mode
-CTR_006,CTR_006_CLS_002,"Provider hereby grants Customer a non-exclusive, non-transferable, revocable license to access and use the software-as-a-service platform (the ""Service"") solely for Customer's internal business operations during the subscription term.","SOFTWARE EULA TEMPLATE
-DOCUMENT ID: PRC_016
-TYPE: Clause Template
-CATEGORY: Intellectual Property
-
-SECTION 1: LICENSE GRANT
-Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
-
-SECTION 2: LICENSE RESTRICTIONS
-Licensee shall not:
-- Reverse engineer, decompile, or disassemble the Software.
-- Copy, modify, or create derivative works.
-- Rent, lease, or distribute the Software to third parties.",Fallback Mode: suggestion generated from standard precedent PRC_016.txt (Software End-User License Agreement (EULA) Template).,MUST_CHANGE,True
-CTR_006,CTR_006_CLS_007,"PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL NOT EXCEED THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE INCIDENT GIVING RISE TO LIABILITY.","LIMITATION OF LIABILITY PLAYBOOK
-DOCUMENT ID: PRC_003
-TYPE: Negotiation Playbook
-CATEGORY: Limitation of Liability
-
-NEGO-RULES:
-Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
-Rule 2: Cap total liability at 12 months fees paid.
-Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
-
-FALLBACK POSITIONS:
-- Fallback 1: Cap at 2x annual contract value.
-- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",Fallback Mode: suggestion generated from standard precedent PRC_003.txt (Limitation of Liability Negotiation Playbook).,MUST_CHANGE,True
-CTR_005,CTR_005_CLS_002,"Provider hereby grants Customer a non-exclusive, non-transferable, revocable license to access and use the software-as-a-service platform (the ""Service"") solely for Customer's internal business operations during the subscription term.","SOFTWARE EULA TEMPLATE
-DOCUMENT ID: PRC_016
-TYPE: Clause Template
-CATEGORY: Intellectual Property
-
-SECTION 1: LICENSE GRANT
-Licensor grants licensee a non-exclusive, non-transferable, limited license to install and run the Software solely for internal business use.
-
-SECTION 2: LICENSE RESTRICTIONS
-Licensee shall not:
-- Reverse engineer, decompile, or disassemble the Software.
-- Copy, modify, or create derivative works.
-- Rent, lease, or distribute the Software to third parties.",Fallback Mode: suggestion generated from standard precedent PRC_016.txt (Software End-User License Agreement (EULA) Template).,MUST_CHANGE,True
-CTR_005,CTR_005_CLS_007,"PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL NOT EXCEED THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE INCIDENT GIVING RISE TO LIABILITY.","LIMITATION OF LIABILITY PLAYBOOK
-DOCUMENT ID: PRC_003
-TYPE: Negotiation Playbook
-CATEGORY: Limitation of Liability
-
-NEGO-RULES:
-Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
-Rule 2: Cap total liability at 12 months fees paid.
-Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
-
-FALLBACK POSITIONS:
-- Fallback 1: Cap at 2x annual contract value.
-- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",Fallback Mode: suggestion generated from standard precedent PRC_003.txt (Limitation of Liability Negotiation Playbook).,MUST_CHANGE,True
-CTR_007,CTR_007_CLS_007,"Vendor shall defend, indemnify, and hold harmless Buyer and its affiliates from and against any third-party claims, liabilities, or losses arising out of: (a) any defect in the Products; or (b) any infringement of intellectual property rights by the Products.","INDEMNIFICATION ALLOCATION BOILERPLATE
-DOCUMENT ID: PRC_010
-TYPE: Clause Template
-CATEGORY: Indemnification
-
-SECTION 8: MUTUAL INDEMNIFICATION
-8.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Client from any third-party claims alleging that the software infringes any patent or copyright.
-8.2 Client Indemnity. Client shall defend, indemnify, and hold harmless Provider from any claims arising out of Client's breach of law or customer data infringement.
-8.3 Conditions. Indemnification is conditioned on prompt notice and sole control of the defense.",Fallback Mode: suggestion generated from standard precedent PRC_010.txt (Indemnification Risk Allocation Guide).,MUST_CHANGE,True
-CTR_008,CTR_008_CLS_007,"Vendor shall defend, indemnify, and hold harmless Buyer and its affiliates from and against any third-party claims, liabilities, or losses arising out of: (a) any defect in the Products; or (b) any infringement of intellectual property rights by the Products.","INDEMNIFICATION ALLOCATION BOILERPLATE
-DOCUMENT ID: PRC_010
-TYPE: Clause Template
-CATEGORY: Indemnification
-
-SECTION 8: MUTUAL INDEMNIFICATION
-8.1 Provider Indemnity. Provider shall defend, indemnify, and hold harmless Client from any third-party claims alleging that the software infringes any patent or copyright.
-8.2 Client Indemnity. Client shall defend, indemnify, and hold harmless Provider from any claims arising out of Client's breach of law or customer data infringement.
-8.3 Conditions. Indemnification is conditioned on prompt notice and sole control of the defense.",Fallback Mode: suggestion generated from standard precedent PRC_010.txt (Indemnification Risk Allocation Guide).,MUST_CHANGE,True
-CTR_004,CTR_004_CLS_006,"IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES. SERVICE PROVIDER'S TOTAL CUMULATIVE LIABILITY UNDER THIS AGREEMENT SHALL NOT EXCEED THE TOTAL FEES PAID BY CLIENT TO SERVICE PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.","LIMITATION OF LIABILITY PLAYBOOK
-DOCUMENT ID: PRC_003
-TYPE: Negotiation Playbook
-CATEGORY: Limitation of Liability
-
-NEGO-RULES:
-Rule 1: Always seek to exclude consequential, incidental, and indirect damages.
-Rule 2: Cap total liability at 12 months fees paid.
-Rule 3: Avoid unlimited liability caps unless required for data security or gross negligence.
-
-FALLBACK POSITIONS:
-- Fallback 1: Cap at 2x annual contract value.
-- Fallback 2: Cap at a fixed sum of $500,000 or insurance coverage limits.",Fallback Mode: suggestion generated from standard precedent PRC_003.txt (Limitation of Liability Negotiation Playbook).,MUST_CHANGE,True
+clause_id,section_number,clause_type,risk_tier,risk_score,negotiation_priority,walk_away_trigger,redlined_clause_excerpt
+CTR_010_CLS_006,5. Dissolution,Indemnification,HIGH,0.5409818186362585,MUST_CHANGE,If counterparty refuses to incorporate the Mutual Non-Disclosure Agreement terms or the Assignment & Change of Control Playbook guidelines.,"In the event of any termination or dissolution, the Parties shall be subject to the terms outlined in the Mutual Non-Disclosure Agreement (as defined below), and the liquidation, payment of debts, and"
+CTR_009_CLS_006,5. Dissolution,Indemnification,HIGH,0.5209818186362585,MUST_CHANGE,"If the counterparty refuses to include a separate Indemnification Clause or fails to accept the suggested redline modification, ALSI should consider terminating negotiations and moving on to other business opportunities.","Upon dissolution, the Partnership's assets shall be liquidated, debts shall be paid in order of priority, and any remaining balance shall be distributed to the Partners in proportion to their capital "
+CTR_007_CLS_007,6. Indemnification,Indemnification,HIGH,0.5176153723398844,MUST_CHANGE,If the counterparty refuses to include Apex Legal Systems Inc. as a party to be indemnified or agrees only on partial acceptance of our standard negotiation positions.,"Vendor shall defend, indemnify, and hold harmless Buyer, its affiliates, and Apex Legal Systems Inc., from any third-party claims, liabilities, or losses arising out of: (a) any defect in the Products"
+CTR_008_CLS_007,6. Indemnification,Indemnification,HIGH,0.5176153723398844,MUST_CHANGE,"The vendor refuses to agree to this revised indemnification clause, or insists on including consequential damages in their indemnity obligation.","Vendor shall defend, indemnify, and hold harmless Buyer and its affiliates, to the extent permitted by law, from any third-party claims, liabilities, or losses arising out of: (a) any defect in the Pr"
+CTR_004_CLS_006,5. Limitation of Liability,Liability,HIGH,0.5124187169472376,MUST_CHANGE,"If Vertex E-Commerce Corp refuses to accept the revised liability cap, Apex Legal Systems Inc. should consider terminating negotiations or seeking alternative service providers.",IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY DIRECT DAMAGES. APEX LEGAL SYSTEMS INC.'S TOTAL CUMULATIVE LIABILITY UNDER THIS AGREEMENT SHALL NOT EXCEED THE TOTAL FEES PAID BY APEX LEG
+CTR_006_CLS_007,6. Limitation of Liability,Liability,HIGH,0.5061529475450516,MUST_CHANGE,"If TalentAcquire International Inc. refuses to accept the suggested revision, there may be a risk of an unbalanced liability allocation that could result in potential financial losses for Apex Legal Systems Inc. under certain circumstances. It is advisable to reconsider signing such an agreement without this revision.","PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL NOT EXCEED THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWELVE "
+CTR_005_CLS_007,6. Limitation of Liability,Liability,HIGH,0.5061529475450516,MUST_CHANGE,"If counterparty insists on excluding indirect damages but refuses to cap total liability at 12 months fees paid, the party should consider walking away or negotiating a different contract with more favorable terms.","PROVIDER'S MAXIMUM AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER IN CONTRACT, TORT, OR OTHERWISE, SHALL BE LIMITED TO THE TOTAL FEES PAID BY CUSTOMER TO PROVIDER IN THE TWEL"
+CTR_003_CLS_006,5. Limitation of Liability,Liability,HIGH,0.4924187169472376,MUST_CHANGE,"If Apex Legal Systems Inc. cannot have the clause amended to exclude consequential, incidental, and indirect damages and cap total liability at fees paid in the preceding 12 months, they should consider negotiating other terms or walking away from the agreement.","IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES. APEX LEGAL SYSTEMS INC.'S TOTAL CUMULATIVE LIABILITY UNDER THIS AGREEMENT"
