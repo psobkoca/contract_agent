@@ -275,7 +275,7 @@ class LLMClient:
                     "http://localhost:11434/api/chat",
                     json=payload,
                     headers=headers,
-                    timeout=30.0
+                    timeout=90.0
                 )
                 response.raise_for_status()
                 res_data = response.json()
