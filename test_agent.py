@@ -198,7 +198,19 @@ def test_react_tool_execution():
     assert mock_client.create_message.call_count == 2
 
 # 6. Contract Pipeline Review and Edge Case validation on all 10 Contracts
-def test_review_all_10_contracts():
+@patch("llm_client.LLMClient.create_message")
+def test_review_all_10_contracts(mock_create_message):
+    expected_response = json.dumps({
+        "original_clause_summary": "Original summary.",
+        "redlined_clause": "Standard redline proposal.",
+        "redline_rationale": "Standard rationale.",
+        "negotiation_priority": "NICE_TO_HAVE",
+        "walk_away_trigger": "None.",
+        "confidence_score": 0.95,
+        "legal_disclaimer": prompts.DISCLAIMER_TEXT
+    })
+    mock_create_message.return_value = MockMessage(content=[MockTextBlock(expected_response)])
+    
     agent = ContractAgent()
     contracts_dir = "contracts"
     all_files = os.listdir(contracts_dir)
